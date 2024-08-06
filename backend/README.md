@@ -6,7 +6,7 @@ API Endpoint : This project provides various API endpoint to perform specific ta
 Data Validation : Utilize FastAPI data validation and serialization feature.
 Interactive Documentation : Access Swagger UI and ReDoc for interactive API documentation.
 
-## Getting Started 
+## Getting Started
 
 Follow these steps to set up and run the project locally:
 
@@ -25,19 +25,19 @@ Run the server:
 > uvicorn score:app --reload
 
 ## Run project using docker
-## prerequisite 
+## prerequisite
 Before proceeding, ensure the following software is installed on your machine
 
 Docker: https://www.docker.com/
 
 1. Build the docker image
    > docker build -t your_image_name .
-   
+
    Replace `your_image_name` with the meaningful name for your Docker image
 
 2. Run the Docker Container
    > docker run -it -p 8000:8000 your_image_name
-   
+
    Replace `8000` with the desired port.
 
 ## Access the API Documentation

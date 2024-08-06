@@ -97,8 +97,8 @@ def get_llm(model: str):
             diffbot_api_key=os.environ.get("DIFFBOT_API_KEY"),
             extract_types=["entities", "facts"],
         )
-    
-    else: 
+
+    else:
         model_name, api_endpoint, api_key = env_value.split(",")
         llm = ChatOpenAI(
             api_key=api_key,
@@ -106,7 +106,7 @@ def get_llm(model: str):
             model=model_name,
             temperature=0,
         )
-            
+
     logging.info(f"Model created - Model Version: {model}")
     return llm, model_name
 
@@ -172,19 +172,19 @@ def get_graph_document_list(
 
 
 def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship):
-    
+
     llm, model_name = get_llm(model)
     combined_chunk_document_list = get_combined_chunks(chunkId_chunkDoc_list)
-    
-    if  allowedNodes is None or allowedNodes=="":
-        allowedNodes =[]
+
+    if allowedNodes is None or allowedNodes == "":
+        allowedNodes = []
     else:
-        allowedNodes = allowedNodes.split(',')    
-    if  allowedRelationship is None or allowedRelationship=="":   
-        allowedRelationship=[]
+        allowedNodes = allowedNodes.split(",")
+    if allowedRelationship is None or allowedRelationship == "":
+        allowedRelationship = []
     else:
-        allowedRelationship = allowedRelationship.split(',')
-        
+        allowedRelationship = allowedRelationship.split(",")
+
     graph_document_list = get_graph_document_list(
         llm, combined_chunk_document_list, allowedNodes, allowedRelationship
     )

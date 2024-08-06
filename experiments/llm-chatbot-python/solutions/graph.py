@@ -8,4 +8,4 @@ graph = Neo4jGraph(
     username=st.secrets["NEO4J_USERNAME"],
     password=st.secrets["NEO4J_PASSWORD"],
 )
-#end::graph[]
+# end::graph[]

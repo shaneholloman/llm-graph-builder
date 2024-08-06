@@ -44,8 +44,5 @@ Question:
 cypher_prompt = PromptTemplate.from_template(CYPHER_GENERATION_TEMPLATE)
 
 cypher_qa = GraphCypherQAChain.from_llm(
-    llm,
-    graph=graph,
-    verbose=True,
-    cypher_prompt=cypher_prompt
+    llm, graph=graph, verbose=True, cypher_prompt=cypher_prompt
 )

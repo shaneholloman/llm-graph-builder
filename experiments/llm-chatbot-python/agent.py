@@ -26,23 +26,27 @@ tools = [
         func=movie_chat.invoke,
     ),
     Tool.from_function(
-        name="Movie Plot Search",  
+        name="Movie Plot Search",
         description="For when you need to find information about movies based on a plot",
-        func=get_movie_plot, 
-    )    
+        func=get_movie_plot,
+    ),
 ]
 # Create chat history callback
 from langchain_community.chat_message_histories import Neo4jChatMessageHistory
 
+
 def get_memory(session_id):
     return Neo4jChatMessageHistory(session_id=session_id, graph=graph)
+
+
 # Create the agent
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain import hub
 
-#agent_prompt = hub.pull("hwchase17/react-chat")
-agent_prompt = PromptTemplate.from_template("""
+# agent_prompt = hub.pull("hwchase17/react-chat")
+agent_prompt = PromptTemplate.from_template(
+    """
 You are a movie expert providing information about movies.
 Be as helpful as possible and return as much information as possible.
 Do not answer any questions that do not relate to movies, actors or directors.
@@ -79,14 +83,11 @@ Previous conversation history:
 
 New input: {input}
 {agent_scratchpad}
-""")
+"""
+)
 
 agent = create_react_agent(llm, tools, agent_prompt)
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    verbose=True
-    )
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 chat_agent = RunnableWithMessageHistory(
     agent_executor,
@@ -97,6 +98,7 @@ chat_agent = RunnableWithMessageHistory(
 # Create a handler to call the agent
 from utils import get_session_id
 
+
 def generate_response(user_input):
     """
     Create a handler that calls the Conversational agent
@@ -105,6 +107,7 @@ def generate_response(user_input):
 
     response = chat_agent.invoke(
         {"input": user_input},
-        {"configurable": {"session_id": get_session_id()}},)
+        {"configurable": {"session_id": get_session_id()}},
+    )
 
-    return response['output']
+    return response["output"]

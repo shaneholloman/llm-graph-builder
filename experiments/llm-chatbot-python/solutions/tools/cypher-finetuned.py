@@ -1,6 +1,8 @@
 from langchain.chains import GraphCypherQAChain
+
 # tag::import-prompt-template[]
 from langchain.prompts.prompt import PromptTemplate
+
 # end::import-prompt-template[]
 
 from solutions.llm import llm
@@ -38,9 +40,6 @@ cypher_prompt = PromptTemplate.from_template(CYPHER_GENERATION_TEMPLATE)
 
 # tag::cypher-qa[]
 cypher_qa = GraphCypherQAChain.from_llm(
-    llm,
-    graph=graph,
-    verbose=True,
-    cypher_prompt=cypher_prompt
+    llm, graph=graph, verbose=True, cypher_prompt=cypher_prompt
 )
 # end::cypher-qa[]

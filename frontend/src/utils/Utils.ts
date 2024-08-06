@@ -55,14 +55,14 @@ export const statusCheck = (status: string) => {
 
 // Graph Functions
 export const constructQuery = (queryTochange: string, docLimit: string) => {
-  return `MATCH docs = (d:Document {status:'Completed'}) 
-  WITH docs, d ORDER BY d.createdAt DESC 
+  return `MATCH docs = (d:Document {status:'Completed'})
+  WITH docs, d ORDER BY d.createdAt DESC
   LIMIT ${docLimit}
   CALL { WITH d
     OPTIONAL MATCH chunks=(d)<-[:PART_OF]-(c:Chunk)
     RETURN chunks, c LIMIT 50
   }
-  WITH [] 
+  WITH []
   ${queryTochange}
   AS paths
   CALL { WITH paths UNWIND paths AS path UNWIND nodes(path) as node RETURN collect(distinct node) as nodes }
@@ -72,14 +72,14 @@ export const constructQuery = (queryTochange: string, docLimit: string) => {
 
 export const constructDocQuery = (queryTochange: string) => {
   return `
-MATCH docs = (d:Document {status:'Completed'}) 
+MATCH docs = (d:Document {status:'Completed'})
 WHERE d.fileName = $document_name
-WITH docs, d ORDER BY d.createdAt DESC 
+WITH docs, d ORDER BY d.createdAt DESC
 CALL { WITH d
   OPTIONAL MATCH chunks=(d)<-[:PART_OF]-(c:Chunk)
   RETURN chunks, c LIMIT 50
 }
-WITH [] 
+WITH []
 ${queryTochange}
 AS paths
 CALL { WITH paths UNWIND paths AS path UNWIND nodes(path) as node RETURN collect(distinct node) as nodes }

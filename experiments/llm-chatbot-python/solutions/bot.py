@@ -1,7 +1,9 @@
 import streamlit as st
 from utils import write_message
+
 # tag::import_agent[]
 from agent import generate_response
+
 # end::import_agent[]
 
 # tag::setup[]
@@ -13,7 +15,10 @@ st.set_page_config("Ebert", page_icon=":movie_camera:")
 # Set up Session State
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Hi, I'm the GraphAcademy Chatbot!  How can I help you?"},
+        {
+            "role": "assistant",
+            "content": "Hi, I'm the GraphAcademy Chatbot!  How can I help you?",
+        },
     ]
 # end::session[]
 
@@ -28,23 +33,24 @@ def handle_submit(message):
     """
 
     # Handle the response
-    with st.spinner('Thinking...'):
+    with st.spinner("Thinking..."):
         # Call the agent
         response = generate_response(message)
-        write_message('assistant', response)
-        
+        write_message("assistant", response)
+
+
 # end::submit[]
 
 
 # tag::chat[]
 # Display messages in Session State
 for message in st.session_state.messages:
-    write_message(message['role'], message['content'], save=False)
+    write_message(message["role"], message["content"], save=False)
 
 # Handle any user input
 if prompt := st.chat_input("What is up?"):
     # Display user message in chat message container
-    write_message('user', prompt)
+    write_message("user", prompt)
 
     # Generate a response
     handle_submit(prompt)

@@ -2,12 +2,12 @@ RAPTOR: RECURSIVE ABSTRACTIVE PROCESSING
 FOR TREE-ORGANIZED RETRIEVAL v1:
 
 Source Code The source code for RAPTOR will be publicly available in https://github.com/parthsarthi03/raptor.
- 
+
 Step1. Documentchunks(100)(to preserve the contextual and semantic coherence, if sentence exceed 100 tokens the whole sentence moves to the next chunk rather than cutting into mid)  clustered  summarized(GPT3.5-turbo) re-embedding(SBERT)
 Leafe nodes have two values: chunk and its embedding using SBERT
 Step2. Follow step1 until further clustering becomes infeasible, resulting in a structured, multi-layered tree representation of the original documents.
 Note: Scalability of both build time and token expenditure is shown below
- 
+
 Step3: For querying within the tree, two distinct strategies are used: tree traversal and collapsed tree. The tree traversal method traverses the tree layer-by-layer, pruning and selecting the most relevant nodes at each level. The collapsed tree method evaluates nodes collectively across all layers to find the most relevant ones.
 
 Clustering Algorithm:
@@ -17,7 +17,7 @@ Should a local cluster’s combined context ever exceed the summarization model�
 In GMM, the number of parameters k is a function of the dimensionality of the input vectors and the number of clusters.
 With the optimal number of clusters determined by BIC, the Expectation-Maximization algorithm is then used to estimate the GMM parameters, namely the means, covariances, and mixture weights. While the Gaussian assumption in GMMs may not perfectly align with the nature of text data, which often exhibits a sparse and skewed distribution, our empirical observations suggest that it offers an effective model for our purpose. We run an ablation comparing GMM Clustering with summarizing contiguous chunks and provide details.
 Querying:
- 
+
 Tree traverse method: method first selects the top-k most relevant root nodes based on their cosine similarity to the query embedding. The children of these selected nodes are considered at the next layer and the top-k nodes are selected from this pool again based on their cosine similarity to the query vector. This process is repeated until we reach the leaf nodes. Finally, the text from all selected nodes is concatenated to form the retrieved context.
 1.	Start at the root layer of the RAPTOR tree. Compute the cosine similarity between the
             query embedding and the embeddings of all nodes present at this initial layer.
@@ -41,7 +41,7 @@ Keep adding nodes to the result set until you reach a predefined maximum number
 
 
 
- 
+
 
 Figure 3: Comparison of querying methods.
 Results on 20 stories from the QASPER dataset

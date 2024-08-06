@@ -10,7 +10,7 @@ Creating knowledge graphs from unstructured data
 ![React](https://img.shields.io/badge/React-blue)
 
 ## Overview
-This application is designed to turn Unstructured data (pdfs,docs,txt,youtube video,web pages,etc.) into a knowledge graph stored in Neo4j. It utilizes the power of Large language models (OpenAI,Gemini,etc.) to extract nodes, relationships and their properties from the text and create a structured knowledge graph using Langchain framework. 
+This application is designed to turn Unstructured data (pdfs,docs,txt,youtube video,web pages,etc.) into a knowledge graph stored in Neo4j. It utilizes the power of Large language models (OpenAI,Gemini,etc.) to extract nodes, relationships and their properties from the text and create a structured knowledge graph using Langchain framework.
 
 Upload your files from local machine, GCS or S3 bucket or from web sources, choose your LLM model and generate knowledge graph.
 
@@ -18,7 +18,7 @@ Upload your files from local machine, GCS or S3 bucket or from web sources, choo
 - **Knowledge Graph Creation**: Transform unstructured data into structured knowledge graphs using LLMs.
 - **Providing Schema**: Provide your own custom schema or use existing schema in settings to generate graph.
 - **View Graph**: View graph for a particular source or multiple sources at a time in Bloom.
-- **Chat with Data**: Interact with your data in a Neo4j database through conversational queries, also retrive metadata about the source of response to your queries. 
+- **Chat with Data**: Interact with your data in a Neo4j database through conversational queries, also retrive metadata about the source of response to your queries.
 
 ## Getting started
 
@@ -103,21 +103,21 @@ Alternatively, you can run the backend and frontend separately:
     ```bash
     cd backend
     python -m venv envName
-    source envName/bin/activate 
+    source envName/bin/activate
     pip install -r requirements.txt
     uvicorn score:app --reload
     ```
 ### Deploy in Cloud
 To deploy the app and packages on Google Cloud Platform, run the following command on google cloud run:
 ```bash
-# Frontend deploy 
-gcloud run deploy 
+# Frontend deploy
+gcloud run deploy
 source location current directory > Frontend
 region : 32 [us-central 1]
 Allow unauthenticated request : Yes
 ```
 ```bash
-# Backend deploy 
+# Backend deploy
 gcloud run deploy --set-env-vars "OPENAI_API_KEY = " --set-env-vars "DIFFBOT_API_KEY = " --set-env-vars "NEO4J_URI = " --set-env-vars "NEO4J_PASSWORD = " --set-env-vars "NEO4J_USERNAME = "
 source location current directory > Backend
 region : 32 [us-central 1]

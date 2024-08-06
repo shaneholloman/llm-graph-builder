@@ -1,8 +1,10 @@
 from llm import llm
 from graph import graph
 from langchain_core.prompts import ChatPromptTemplate
+
 # tag::import_prompt[]
 from langchain_core.prompts import PromptTemplate
+
 # end::import_prompt[]
 from langchain.schema import StrOutputParser
 from langchain.tools import Tool
@@ -28,11 +30,15 @@ tools = [
         func=movie_chat.invoke,
     )
 ]
+
+
 def get_memory(session_id):
     return Neo4jChatMessageHistory(session_id=session_id, graph=graph)
 
+
 # tag::agent_prompt[]
-agent_prompt = PromptTemplate.from_template("""
+agent_prompt = PromptTemplate.from_template(
+    """
 You are a movie expert providing information about movies.
 Be as helpful as possible and return as much information as possible.
 Do not answer any questions that do not relate to movies, actors or directors.
@@ -69,16 +75,13 @@ Previous conversation history:
 
 New input: {input}
 {agent_scratchpad}
-""")
+"""
+)
 # end::agent_prompt[]
 
 # tag::agent[]
 agent = create_react_agent(llm, tools, agent_prompt)
-agent_executor = AgentExecutor(
-    agent=agent,
-    tools=tools,
-    verbose=True
-    )
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 chat_agent = RunnableWithMessageHistory(
     agent_executor,
@@ -88,6 +91,7 @@ chat_agent = RunnableWithMessageHistory(
 )
 # end::agent[]
 
+
 def generate_response(user_input):
     """
     Create a handler that calls the Conversational agent
@@ -96,6 +100,7 @@ def generate_response(user_input):
 
     response = chat_agent.invoke(
         {"input": user_input},
-        {"configurable": {"session_id": get_session_id()}},)
+        {"configurable": {"session_id": get_session_id()}},
+    )
 
-    return response['output']
+    return response["output"]

@@ -12,9 +12,9 @@ Neo4j database connection on frontend is done with this API.
 
 **API Parameters :**
 
-* `uri`= Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`= Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 
 
@@ -42,9 +42,9 @@ The upload endpoint is designed to handle the uploading of large files by breaki
 * `totalChunks`=The total number of chunks the file is divided into (each chunk of 1Mb size),
 * `originalname`=The original name of the file,
 * `model`=The model associated with the file,
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 
 **Response :**
@@ -62,13 +62,13 @@ The upload endpoint is designed to handle the uploading of large files by breaki
 POST /schema
 ----
 
-User can set schema for graph generation (i.e. Nodes and relationship labels) in settings panel or get existing db schema through this API. 
+User can set schema for graph generation (i.e. Nodes and relationship labels) in settings panel or get existing db schema through this API.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 
 
@@ -144,18 +144,18 @@ The API is used to populate a graph schema based on the provided input text, mod
 ....
 
 
-=== Unstructured sources scan other than local 
+=== Unstructured sources scan other than local
 ----
-POST /url/scan 
+POST /url/scan
 ----
 
 Create Document node for other sources - s3 bucket, gcs bucket, wikipedia, youtube url and web pages.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 * `model`= LLM model,
 * `source_url`= <s3 bucket url or youtube url> ,
@@ -197,10 +197,10 @@ POST /extract :
 
 This API is responsible for -
 
-** Reading the content of source provided in the form of langchain Document object from respective langchain loaders 
+** Reading the content of source provided in the form of langchain Document object from respective langchain loaders
 
-** Dividing the document into multiple chunks, and make below relations - 
-*** PART_OF - relation from Document node to all chunk nodes 
+** Dividing the document into multiple chunks, and make below relations -
+*** PART_OF - relation from Document node to all chunk nodes
 *** FIRST_CHUNK - relation from document node to first chunk node
 *** NEXT_CHUNK - relation from a chunk pointing to next chunk of the document.
 *** HAS_ENTITY - relation between chunk node and entities extracted from LLM.
@@ -214,16 +214,16 @@ This API is responsible for -
 
 **Implementation :**
 
-** For multiple sources of content - 
+** For multiple sources of content -
 
 *** Local file - User can upload pdf file from their device.
 
-*** s3 bucket - User passes the bucket url and all the pdf files inside folders and subfolders will be listed. 
+*** s3 bucket - User passes the bucket url and all the pdf files inside folders and subfolders will be listed.
 
 *** GCS bucket - User passes gcs project id, gcs bucket name and folder name, do google authentication to access all the pdf files under that folder and its subfolders and if folder name is not passed by user, all the pdf files under the bucket and its subfolders will be listed if user have read access of the bucket.
 
-*** Web Sources - 
-**** Wikipedia - Wikipedia 1st page content is rendered url passed by user. 
+*** Web Sources -
+**** Wikipedia - Wikipedia 1st page content is rendered url passed by user.
 
 **** Youtube - Youtube video transcript is processed and if no transcript is available then respective error is thrown.
 
@@ -237,9 +237,9 @@ This API is responsible for -
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 * `model`= LLM model,
 * `file_name` = File uploaded from device
@@ -272,7 +272,7 @@ allowedNodes=Node labels passed from settings panel,
 }
 ....
 
-     
+
 === Get list of sources
 ----
 GET /sources_list
@@ -282,9 +282,9 @@ List all sources (Document nodes) present in Neo4j graph database.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 
 **Response :**
@@ -335,9 +335,9 @@ This API is called at the end of processing of whole document to get create k-ne
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 * `tasks`= List of tasks to perform
 
@@ -359,8 +359,8 @@ POST /chat_bot
 
 The API responsible for a chatbot system designed to leverage multiple AI models and a Neo4j graph database, providing answers to user queries. It interacts with AI models from OpenAI and Google's Vertex AI and utilizes embedding models to enhance the retrieval of relevant information.
 
-**Components :** 
- 
+**Components :**
+
 ** Embedding Models - Includes OpenAI Embeddings, VertexAI Embeddings, and SentenceTransformer Embeddings to support vector-based query operations.
 ** AI Models - OpenAI GPT 3.5, GPT 4o, Gemini Pro, Gemini 1.5 Pro and Groq llama3 can be configured for the chatbot backend to generate responses and process natural language.
 ** Graph Database (Neo4jGraph) - Manages interactions with the Neo4j database, retrieving, and storing conversation histories.
@@ -416,9 +416,9 @@ This API is used to  get the entities and relations associated with a particular
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 * `chunk_ids` = Chunk ids of document
 
@@ -439,7 +439,7 @@ This API is used to  get the entities and relations associated with a particular
                     "id": "Fibrosis"
                 }
             },
- 
+
         ],
         "relationships": [
             {
@@ -479,9 +479,9 @@ This API is used to view graph for a particular file.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `query_type`= Neo4j database name
 * `document_names` = File name for which user wants to view graph
 
@@ -518,10 +518,10 @@ This API is used to view graph for a particular file.
                 "type": "PLAYER",
                 "start_node_element_id": "4:98e5e9bb-8095-440d-9462-03985fed2fa2:9972",
                 "end_node_element_id": "4:98e5e9bb-8095-440d-9462-03985fed2fa2:9973"
-            }  
+            }
         ]
     }
-}    
+}
 ....
 
 === Clear chat history
@@ -533,9 +533,9 @@ This API is used to clear the chat history which is saved in Neo4j DB.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name,
 * `session_id` = User session id for QA chat
 
@@ -555,7 +555,7 @@ This API is used to clear the chat history which is saved in Neo4j DB.
 
 === SSE event to update processing status
 ----
-GET /update_extract_status 
+GET /update_extract_status
 ----
 
 The API provides a continuous update on the extraction status of a specified file. It uses Server-Sent Events (SSE) to stream updates to the client.
@@ -563,9 +563,9 @@ The API provides a continuous update on the extraction status of a specified fil
 **API Parameters :**
 
 * `file_name`=The name of the file whose extraction status is being tracked,
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 
 
@@ -573,15 +573,15 @@ The API provides a continuous update on the extraction status of a specified fil
 [source,json,indent=0]
 ....
 {
-    "fileName": "testFile.pdf", 
-    "status": "Processing", 
-    "processingTime": 0, 
-    "nodeCount": 0, 
-    "relationshipCount": 0, 
-    "model": "OpenAI GPT 3.5", 
-    "total_chunks": 3, 
-    "total_pages": 1, 
-    "fileSize": 92373, 
+    "fileName": "testFile.pdf",
+    "status": "Processing",
+    "processingTime": 0,
+    "nodeCount": 0,
+    "relationshipCount": 0,
+    "model": "OpenAI GPT 3.5",
+    "total_chunks": 3,
+    "total_pages": 1,
+    "fileSize": 92373,
     "processed_chunk": 0
 }
 ....
@@ -593,13 +593,13 @@ POST /delete_document_and_entities
 
 **Overview :**
 
-Deleteion of nodes and relations for multiple files is done through this API. User can choose multiple documents to be deleted, also user have option to delete only 'Document' and 'Chunk' nodes and keep the entities extracted from that document. 
+Deleteion of nodes and relations for multiple files is done through this API. User can choose multiple documents to be deleted, also user have option to delete only 'Document' and 'Chunk' nodes and keep the entities extracted from that document.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name,
 * `filenames`= List of files to be deleted,
 * `source_types`= Document sources(Wikipedia, youtube, etc.),
@@ -623,11 +623,11 @@ This API is responsible for cancelling an in process job.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name,
-* `filenames`= Name of the file whose processing need to be stopped, 
+* `filenames`= Name of the file whose processing need to be stopped,
 * `source_types`= Source of the file
 
 
@@ -649,9 +649,9 @@ The API retrieves a list of nodes in the graph database that are not connected t
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name
 
 
@@ -660,13 +660,13 @@ The API retrieves a list of nodes in the graph database that are not connected t
 ....
 {   "status": "Success",
     "data": [
-      "e": 
-        {        
-            "id": "Leela Chess Zero",        
-            "elementId": "4:abf6f691-928d-4b1c-80fc-2914ae517b4c:336",        
-            "labels": ["Technology"],        
-            "embedding": null       
-        },      
+      "e":
+        {
+            "id": "Leela Chess Zero",
+            "elementId": "4:abf6f691-928d-4b1c-80fc-2914ae517b4c:336",
+            "labels": ["Technology"],
+            "embedding": null
+        },
         "documents": ["AlphaZero - Wikipedia.pdf"],
       "chunkConnections": 7
     ]
@@ -683,9 +683,9 @@ The API is used to delete unconnected entities from database.
 
 **API Parameters :**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
+* `uri`=Neo4j uri,
+* `userName`= Neo4j db username,
+* `password`= Neo4j db password,
 * `database`= Neo4j database name,
 * `unconnected_entities_list`=selected entities list to delete of unconnected entities.
 
@@ -693,7 +693,7 @@ The API is used to delete unconnected entities from database.
 **Response :**
 [source,json,indent=0]
 ....
-{   
+{
     "status": "Success",
     "message: "Unconnected entities delete successfully"
 }
@@ -706,7 +706,7 @@ The API is used to delete unconnected entities from database.
 * Split document content into chunks of size 200 and overlap of 20
 * Configurable elements -
 ** Number of chunks to combine
-** Generate Embedding or not 
+** Generate Embedding or not
 ** Embedding model
 ** minimum score for KNN graph
 ** Uploaded file storage location (GCS bucket or container)

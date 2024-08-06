@@ -8,7 +8,7 @@ export const chunks = `+ collect { MATCH p=(c)-[:NEXT_CHUNK]-() RETURN p } // ch
 
 export const entities = `+ collect { OPTIONAL MATCH (c:Chunk)-[:HAS_ENTITY]->(e), p=(e)-[*0..1]-(:!Chunk) RETURN p}`;
 
-export const docEntities = `+ [docs] 
+export const docEntities = `+ [docs]
 + collect { MATCH (c:Chunk)-[:HAS_ENTITY]->(e), p=(e)--(:!Chunk) RETURN p }`;
 
 export const docChunks = `+[chunks]
