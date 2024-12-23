@@ -203,6 +203,15 @@ async def extract_knowledge_graph_from_file(
         start_time = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)   
         graphDb_data_Access = graphDBdataAccess(graph)
+        result = graphDb_data_Access.connection_check_and_get_vector_dimensions(database)
+        if 'db_vector_dimension' in result and 'application_dimension' in result:
+            db_dim = result['db_vector_dimension']
+            app_dim = result['application_dimension']
+            if not (db_dim == 0):
+                if not (db_dim == app_dim):
+                    logging.info(f"Vector dimensions mismatch, current index dimensions in db : {db_dim}, application dimension : {app_dim}")
+                    return create_api_response('Success',data=result)
+            
         if source_type == 'local file':
             merged_file_path = os.path.join(MERGED_DIR,file_name)
             logging.info(f'File path:{merged_file_path}')
