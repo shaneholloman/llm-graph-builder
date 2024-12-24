@@ -15,6 +15,7 @@ export default function ConnectionModal({
   isVectorIndexMatch,
   chunksExistsWithoutEmbedding,
   chunksExistsWithDifferentEmbedding,
+  uservectordimension,
 }: ConnectionModalProps) {
   let prefilledconnection = localStorage.getItem('neo4j.connection');
   let initialuri;
@@ -45,7 +46,9 @@ export default function ConnectionModal({
     useCredentials();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [userDbVectorIndex, setUserDbVectorIndex] = useState<number | undefined>(initialuserdbvectorindex ?? undefined);
+  const [userDbVectorIndex, setUserDbVectorIndex] = useState<number | undefined>(
+    uservectordimension ?? initialuserdbvectorindex ?? undefined
+  );
   const [vectorIndexLoading, setVectorIndexLoading] = useState<boolean>(false);
   const connectRef = useRef<HTMLButtonElement>(null);
   const uriRef = useRef<HTMLInputElement>(null);

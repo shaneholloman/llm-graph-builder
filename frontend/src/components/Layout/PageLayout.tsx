@@ -295,6 +295,7 @@ const PageLayout: React.FC = () => {
             setOpenConnection={setOpenConnection}
             showDisconnectButton={showDisconnectButton}
             connectionStatus={connectionStatus}
+            openConnection={{ ...openConnection, uservectordimenstion: 384 }}
           />
           {isRightExpanded && (
             <DrawerChatbot
@@ -355,6 +356,7 @@ const PageLayout: React.FC = () => {
               setOpenConnection={setOpenConnection}
               showDisconnectButton={showDisconnectButton}
               connectionStatus={connectionStatus}
+              openConnection={{ ...openConnection, uservectordimenstion: 384 }}
             />
             {isRightExpanded && (
               <DrawerChatbot

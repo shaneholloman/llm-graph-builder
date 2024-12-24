@@ -156,6 +156,7 @@ export interface ContentProps {
   setOpenConnection: Dispatch<SetStateAction<connectionState>>;
   showDisconnectButton: boolean;
   connectionStatus: boolean;
+  openConnection: withuserdimension;
 }
 
 export interface FileTableProps {
@@ -697,6 +698,7 @@ export interface ConnectionModalProps {
   chunksExistsWithDifferentEmbedding: boolean;
   onSuccess?: () => void;
   isChatOnly?: boolean;
+  uservectordimension?: number;
 }
 export interface ReusableDropdownProps extends DropdownProps {
   options: string[] | OptionType[];
@@ -938,3 +940,13 @@ export interface filedate {
   };
 }
 export type FileTableHandle = React.ElementRef<typeof FileTable>;
+export interface withuserdimension extends connectionState {
+  uservectordimenstion: number;
+}
+export interface dbinfo {
+  db_vector_dimension: number;
+  application_dimension: number;
+  message: string;
+  gds_status: boolean;
+  write_access: boolean;
+}

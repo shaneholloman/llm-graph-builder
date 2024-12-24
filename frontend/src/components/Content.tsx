@@ -12,6 +12,7 @@ import {
   UserCredentials,
   chunkdata,
   FileTableHandle,
+  withuserdimension,
 } from '../types';
 import deleteAPI from '../services/DeleteFiles';
 import { postProcessing } from '../services/PostProcessing';
@@ -44,6 +45,8 @@ import PostProcessingToast from './Popups/GraphEnhancementDialog/PostProcessingC
 import { getChunkText } from '../services/getChunkText';
 import ChunkPopUp from './Popups/ChunkPopUp';
 import { isExpired, isFileReadyToProcess } from '../utils/Utils';
+import useVectorIndexMismatchAlert from '../hooks/useVectorIndexMisMatch';
+import ConnectionModal from './Popups/ConnectionModal/ConnectionModal';
 
 const ConfirmationDialog = lazy(() => import('./Popups/LargeFilePopUp/ConfirmationDialog'));
 
@@ -57,6 +60,7 @@ const Content: React.FC<ContentProps> = ({
   setOpenConnection,
   showDisconnectButton,
   connectionStatus,
+  openConnection,
 }) => {
   const { breakpoints } = tokens;
   const isTablet = useMediaQuery(`(min-width:${breakpoints.xs}) and (max-width: ${breakpoints.lg})`);
@@ -77,6 +81,9 @@ const Content: React.FC<ContentProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPageCount, setTotalPageCount] = useState<number | null>(null);
   const [textChunks, setTextChunks] = useState<chunkdata[]>([]);
+  const { checkVectorIndex } = useVectorIndexMismatchAlert((connectionState: withuserdimension) => {
+    setOpenConnection(connectionState);
+  });
 
   const [alertStateForRetry, setAlertStateForRetry] = useState<BannerAlertProps>({
     showAlert: false,
@@ -217,7 +224,7 @@ const Content: React.FC<ContentProps> = ({
     }
     toggleChunksLoading();
   };
-  
+
   const extractData = async (uid: string, isselectedRows = false, filesTobeProcess: CustomFile[]) => {
     if (!isselectedRows) {
       const fileItem = filesData.find((f) => f.id == uid);
@@ -291,23 +298,26 @@ const Content: React.FC<ContentProps> = ({
         let errorobj = { error: apiResponse.error, message: apiResponse.message, fileName: apiResponse.file_name };
         throw new Error(JSON.stringify(errorobj));
       } else if (fileItem.size != undefined && fileItem.size < largeFileSize) {
-        setFilesData((prevfiles) => {
-          return prevfiles.map((curfile) => {
-            if (curfile.name == apiResponse?.data?.fileName) {
-              const apiRes = apiResponse?.data;
-              return {
-                ...curfile,
-                processingProgress: apiRes?.processingTime?.toFixed(2),
-                processingTotalTime: apiRes?.processingTime?.toFixed(2),
-                status: apiRes?.status,
-                nodesCount: apiRes?.nodeCount,
-                relationshipsCount: apiRes?.relationshipCount,
-                model: apiRes?.model,
-              };
-            }
-            return curfile;
+        checkVectorIndex(apiResponse.data);
+        if (connectionStatus) {
+          setFilesData((prevfiles) => {
+            return prevfiles.map((curfile) => {
+              if (curfile.name == apiResponse?.data?.fileName) {
+                const apiRes = apiResponse?.data;
+                return {
+                  ...curfile,
+                  processingProgress: apiRes?.processingTime?.toFixed(2),
+                  processingTotalTime: apiRes?.processingTime?.toFixed(2),
+                  status: apiRes?.status,
+                  nodesCount: apiRes?.nodeCount,
+                  relationshipsCount: apiRes?.relationshipCount,
+                  model: apiRes?.model,
+                };
+              }
+              return curfile;
+            });
           });
-        });
+        }
       }
     } catch (err: any) {
       if (err instanceof Error) {
@@ -728,6 +738,17 @@ const Content: React.FC<ContentProps> = ({
 
   return (
     <>
+      <Suspense fallback={<FallBackDialog />}>
+        <ConnectionModal
+          open={openConnection.openPopUp}
+          setOpenConnection={setOpenConnection}
+          setConnectionStatus={setConnectionStatus}
+          isVectorIndexMatch={openConnection.vectorIndexMisMatch}
+          chunksExistsWithoutEmbedding={openConnection.chunksExists}
+          chunksExistsWithDifferentEmbedding={openConnection.chunksExistsWithDifferentDimension}
+          uservectordimension={openConnection.uservectordimenstion}
+        />
+      </Suspense>
       <RetryConfirmationDialog
         retryLoading={retryLoading}
         retryHandler={retryHandler}

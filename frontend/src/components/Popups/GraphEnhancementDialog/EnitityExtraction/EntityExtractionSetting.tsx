@@ -284,7 +284,7 @@ export default function EntityExtractionSetting({
           <h5>{appLabels.ownSchema}</h5>
         </div>
         <Select
-          helpText='You can select more than one values'
+          helpText='You can select more than one value'
           label='Node Labels'
           size={view === 'Tabs' && !isTablet ? 'large' : isTablet ? 'small' : 'medium'}
           selectProps={{
@@ -300,7 +300,7 @@ export default function EntityExtractionSetting({
           type='creatable'
         />
         <Select
-          helpText='You can select more than one values'
+          helpText='You can select more than one value'
           label='Relationship Types'
           size={view === 'Tabs' && !isTablet ? 'large' : isTablet ? 'small' : 'medium'}
           selectProps={{
