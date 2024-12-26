@@ -203,14 +203,18 @@ async def extract_knowledge_graph_from_file(
         start_time = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)   
         graphDb_data_Access = graphDBdataAccess(graph)
-        result = graphDb_data_Access.connection_check_and_get_vector_dimensions(database)
-        if 'db_vector_dimension' in result and 'application_dimension' in result:
-            db_dim = result['db_vector_dimension']
-            app_dim = result['application_dimension']
+        index_match = graphDb_data_Access.connection_check_and_get_vector_dimensions(database)
+        if 'db_vector_dimension' in index_match and 'application_dimension' in index_match:
+            db_dim = index_match['db_vector_dimension']
+            app_dim = index_match['application_dimension']
+            logging.info(f"Vector dimensions DB dimension={db_dim}, Application dimension={app_dim}")
             if not (db_dim == 0):
                 if not (db_dim == app_dim):
-                    logging.info(f"Vector dimensions mismatch, current index dimensions in db : {db_dim}, application dimension : {app_dim}")
-                    return create_api_response('Success',data=result)
+                    mismatch_error = f"Vector dimensions mismatch: DB dimension={db_dim}, Application dimension={app_dim}"
+                    logging.error(mismatch_error)
+                    if source_type == 'local file':
+                        merged_file_path = os.path.join(MERGED_DIR,file_name)
+                    raise Exception(mismatch_error)
             
         if source_type == 'local file':
             merged_file_path = os.path.join(MERGED_DIR,file_name)
@@ -290,7 +294,10 @@ async def extract_knowledge_graph_from_file(
         json_obj = {'message':message,'error_message':error_message, 'file_name': file_name,'status':'Failed','db_url':uri,'failed_count':1, 'source_type': source_type, 'source_url':source_url, 'wiki_query':wiki_query, 'logging_time': formatted_time(datetime.now(timezone.utc))}
         logger.log_struct(json_obj, "ERROR")
         logging.exception(f'File Failed in extraction: {json_obj}')
-        return create_api_response('Failed', message=message + error_message[:100], error=error_message, file_name = file_name)
+        if not mismatch_error:
+            return create_api_response('Failed', message=message + error_message[:100], error=error_message, file_name = file_name)
+        else:
+            return create_api_response('Failed', message=error_message, error=error_message,data=index_match,file_name = file_name)
     finally:
         gc.collect()
             
@@ -325,9 +332,15 @@ async def post_processing(uri=Form(), userName=Form(), password=Form(), database
         count_response = []
         start = time.time()
         if "materialize_text_chunk_similarities" in tasks:
-            await asyncio.to_thread(update_graph, graph)
-            api_name = 'post_processing/update_similarity_graph'
-            logging.info(f'Updated KNN Graph')
+            graphDb_data_Access = graphDBdataAccess(graph)
+            index_match = graphDb_data_Access.connection_check_and_get_vector_dimensions(database)
+            if 'db_vector_dimension' in index_match and 'application_dimension' in index_match:
+                db_dim = index_match['db_vector_dimension']
+                app_dim = index_match['application_dimension']
+                if (db_dim == app_dim):
+                    await asyncio.to_thread(update_graph, graph)
+                    api_name = 'post_processing/update_similarity_graph'
+                    logging.info(f'Updated KNN Graph')
 
         if "enable_hybrid_search_and_fulltext_search_in_bloom" in tasks:
             await asyncio.to_thread(create_vector_fulltext_indexes, uri=uri, username=userName, password=password, database=database)
