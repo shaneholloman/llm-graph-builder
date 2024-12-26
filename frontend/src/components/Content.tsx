@@ -295,10 +295,10 @@ const Content: React.FC<ContentProps> = ({
       );
 
       if (apiResponse?.status === 'Failed') {
+        checkVectorIndex(apiResponse.data);
         let errorobj = { error: apiResponse.error, message: apiResponse.message, fileName: apiResponse.file_name };
         throw new Error(JSON.stringify(errorobj));
       } else if (fileItem.size != undefined && fileItem.size < largeFileSize) {
-        checkVectorIndex(apiResponse.data);
         if (connectionStatus) {
           setFilesData((prevfiles) => {
             return prevfiles.map((curfile) => {
