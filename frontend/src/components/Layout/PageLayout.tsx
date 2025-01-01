@@ -24,6 +24,7 @@ const PageLayout: React.FC = () => {
     chunksExists: false,
     vectorIndexMisMatch: false,
     chunksExistsWithDifferentDimension: false,
+    trigger: 'connect',
   });
   const largedesktops = useMediaQuery(`(min-width:1440px )`);
   const { userCredentials, connectionStatus, setIsReadOnlyUser } = useCredentials();
@@ -236,12 +237,13 @@ const PageLayout: React.FC = () => {
     <>
       <Suspense fallback={<FallBackDialog />}>
         <ConnectionModal
-          open={openConnection.openPopUp}
+          open={openConnection.openPopUp && openConnection.trigger === 'connect'}
           setOpenConnection={setOpenConnection}
           setConnectionStatus={setConnectionStatus}
           isVectorIndexMatch={openConnection.vectorIndexMisMatch}
           chunksExistsWithoutEmbedding={openConnection.chunksExists}
           chunksExistsWithDifferentEmbedding={openConnection.chunksExistsWithDifferentDimension}
+          key='connect'
         />
       </Suspense>
       <SchemaFromTextDialog

@@ -740,13 +740,14 @@ const Content: React.FC<ContentProps> = ({
     <>
       <Suspense fallback={<FallBackDialog />}>
         <ConnectionModal
-          open={openConnection.openPopUp}
+          open={openConnection.openPopUp && openConnection.trigger === 'extract'}
           setOpenConnection={setOpenConnection}
           setConnectionStatus={setConnectionStatus}
           isVectorIndexMatch={openConnection.vectorIndexMisMatch}
           chunksExistsWithoutEmbedding={openConnection.chunksExists}
           chunksExistsWithDifferentEmbedding={openConnection.chunksExistsWithDifferentDimension}
           uservectordimension={openConnection.uservectordimenstion}
+          key={'extract'}
         />
       </Suspense>
       <RetryConfirmationDialog

@@ -21,6 +21,7 @@ const ChatContent: React.FC<ChatProps> = ({ chatMessages }) => {
     chunksExists: false,
     vectorIndexMisMatch: false,
     chunksExistsWithDifferentDimension: false,
+    trigger: 'connect',
   });
   /**
    * Initializes connection settings based on URL parameters.
@@ -109,13 +110,14 @@ const ChatContent: React.FC<ChatProps> = ({ chatMessages }) => {
   return (
     <>
       <ConnectionModal
-        open={openConnection.openPopUp && !connectionStatus}
+        open={openConnection.openPopUp && !connectionStatus && openConnection.trigger === 'connect'}
         setOpenConnection={setOpenConnection}
         setConnectionStatus={setConnectionStatus}
         isVectorIndexMatch={false}
         chunksExistsWithoutEmbedding={false}
         chunksExistsWithDifferentEmbedding={false}
         onSuccess={handleConnectionSuccess}
+        key='connect'
         isChatOnly={true}
       />
       <div>

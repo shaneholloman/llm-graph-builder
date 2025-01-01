@@ -17,6 +17,7 @@ export default function useVectorIndexMismatchAlert(resetConnection: (connection
         vectorIndexMisMatch: true,
         uservectordimenstion: response.db_vector_dimension,
         chunksExists: true,
+        trigger: 'extract',
       });
     }
   }, []);

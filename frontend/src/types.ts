@@ -683,6 +683,7 @@ export interface connectionState {
   chunksExists: boolean;
   vectorIndexMisMatch: boolean;
   chunksExistsWithDifferentDimension: boolean;
+  trigger: 'connect' | 'extract';
 }
 export interface Message {
   type: 'success' | 'info' | 'warning' | 'danger' | 'unknown';
