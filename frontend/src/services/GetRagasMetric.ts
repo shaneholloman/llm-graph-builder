@@ -8,14 +8,20 @@ export const getChatMetrics = async (
   model: string,
   mode: string[]
 ) => {
-  const formData = new FormData();
-  formData.append('question', question);
-  formData.append('context', JSON.stringify(context));
-  formData.append('answer', JSON.stringify(answer));
-  formData.append('model', model);
-  formData.append('mode', JSON.stringify(mode));
+  // const formData = new FormData();
+  // formData.append('question', question);
+  // formData.append('context', JSON.stringify(context));
+  // formData.append('answer', JSON.stringify(answer));
+  // formData.append('model', model);
+  // formData.append('mode', JSON.stringify(mode));
   try {
-    const response = await api.post<MetricsResponse>(`/metric`, formData);
+    const response = await api.post<MetricsResponse>(`/metric`, {
+      question,
+      context,
+      answer,
+      model,
+      mode
+    });
     return response;
   } catch (error) {
     console.log(error);
