@@ -861,16 +861,17 @@ async def retry_processing(uri=Form(), userName=Form(), password=Form(), databas
         gc.collect()    
 
 @app.post('/metric')
-async def calculate_metric(question: str = Form(),
-                           context: str = Form(),
-                           answer: str = Form(),
-                           model: str = Form(),
-                           mode: str = Form()):
+async def calculate_metric(question: str = "",
+                           context: list[str] = [],
+                           answer: list[str] = [] ,
+                           model: str = "",
+                           mode: list[str] =[],
+                           ):
     try:
         start = time.time()
-        context_list = [str(item).strip() for item in json.loads(context)] if context else []
-        answer_list = [str(item).strip() for item in json.loads(answer)] if answer else []
-        mode_list = [str(item).strip() for item in json.loads(mode)] if mode else []
+        context_list = [item.strip() for item in context]
+        answer_list = [item.strip() for item in answer]
+        mode_list = [item.strip() for item in mode]
 
         result = await asyncio.to_thread(
             get_ragas_metrics, question, context_list, answer_list, model
@@ -900,17 +901,17 @@ async def calculate_metric(question: str = Form(),
        
 
 @app.post('/additional_metrics')
-async def calculate_additional_metrics(question: str = Form(),
-                                        context: str = Form(),
-                                        answer: str = Form(),
-                                        reference: str = Form(),
-                                        model: str = Form(),
-                                        mode: str = Form(),
+async def calculate_additional_metrics(question: str = "",
+                                        context: list[str] = [],
+                                        answer: list[str] = [],
+                                        reference: str = "",
+                                        model: str = "",
+                                        mode: list[str] = [],
 ):
    try:
-       context_list = [str(item).strip() for item in json.loads(context)] if context else []
-       answer_list = [str(item).strip() for item in json.loads(answer)] if answer else []
-       mode_list = [str(item).strip() for item in json.loads(mode)] if mode else []
+       context_list = [item.strip() for item in context]
+       answer_list = [item.strip() for item in answer]
+       mode_list = [item.strip() for item in mode]
        result = await get_additional_metrics(question, context_list,answer_list, reference, model)
        if result is None or "error" in result:
            return create_api_response(
