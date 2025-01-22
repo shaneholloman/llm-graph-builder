@@ -60,7 +60,7 @@ def test_graph_from_file_local(model_name):
         shutil.copyfile('/workspaces/llm-graph-builder/backend/files/About Amazon.pdf',os.path.join(MERGED_DIR, file_name))
         create_source_node_local(graph, model_name, file_name)
         merged_file_path = os.path.join(MERGED_DIR, file_name)
-        local_file_result = asyncio.run(extract_graph_from_file_local_file(URI, USERNAME, PASSWORD, DATABASE, model_name, merged_file_path, file_name, '', '',None))
+        local_file_result = asyncio.run(extract_graph_from_file_local_file(URI, USERNAME, PASSWORD, DATABASE, model_name, merged_file_path, file_name, '', '',None,''))
         logging.info("Local file processing complete")
         print(local_file_result)
         return local_file_result
@@ -88,7 +88,7 @@ def test_graph_from_wikipedia(model_name):
        file_name = "Apollo_program"
        create_source_node_graph_url_wikipedia(graph, model_name, wiki_query, source_type)
 
-       wiki_result = asyncio.run(extract_graph_from_file_Wikipedia(URI, USERNAME, PASSWORD, DATABASE, model_name, wiki_query, 'en',file_name, '', '',None))
+       wiki_result = asyncio.run(extract_graph_from_file_Wikipedia(URI, USERNAME, PASSWORD, DATABASE, model_name, wiki_query, 'en',file_name, '', '',None,''))
        logging.info("Wikipedia test done")
        print(wiki_result)
     #    try:
@@ -113,7 +113,7 @@ def test_graph_website(model_name):
     # file_name = []
     create_source_node_graph_web_url(graph, model_name, source_url, source_type)
 
-    weburl_result = asyncio.run(extract_graph_from_web_page(URI, USERNAME, PASSWORD, DATABASE, model_name, source_url,file_name, '', '',None))
+    weburl_result = asyncio.run(extract_graph_from_web_page(URI, USERNAME, PASSWORD, DATABASE, model_name, source_url,file_name, '', '',None,''))
     logging.info("WebUrl test done")
     print(weburl_result)
 
@@ -132,7 +132,7 @@ def test_graph_from_youtube_video(model_name):
    file_name = 'NKc8Tr5_L3w'
    source_type = 'youtube'
    create_source_node_graph_url_youtube(graph, model_name, source_url, source_type)
-   youtube_result = asyncio.run(extract_graph_from_file_youtube(URI, USERNAME, PASSWORD, DATABASE, model_name, source_url,file_name,'','',None))
+   youtube_result = asyncio.run(extract_graph_from_file_youtube(URI, USERNAME, PASSWORD, DATABASE, model_name, source_url,file_name,'','',None,''))
    logging.info("YouTube Video test done")
    print(youtube_result)
 
@@ -166,7 +166,6 @@ def disconected_nodes():
    #graph = create_graph_database_connection(uri, userName, password, database)
    graphDb_data_Access = graphDBdataAccess(graph)
    nodes_list, total_nodes = graphDb_data_Access.list_unconnected_nodes()
-   print(nodes_list[0]["e"]["elementId"])
    status = "False"
    if total_nodes['total']>0:
        status = "get_unconnected_nodes_list.. records loaded successfully"
@@ -212,8 +211,7 @@ def run_tests():
    final_list = []
    error_list = []
    
-   models = ['openai_gpt_4','openai_gpt_4o','openai_gpt_4o_mini','gemini_1.5_pro','gemini_1.5_flash']
-
+   models = ['openai_gpt_4','openai_gpt_4o','openai_gpt_4o_mini','gemini_1.5_pro','gemini_1.5_flash','bedrock_nova_micro_v1','bedrock_nova_lite_v1','bedrock_nova_pro_v1']
    for model_name in models:
        try:
                 final_list.append(test_graph_from_file_local(model_name))
@@ -227,7 +225,7 @@ def run_tests():
                 final_list.append(test_chatbot_qna(model_name, mode='fulltext'))
                 final_list.append(test_chatbot_qna(model_name, mode='graph+vector+fulltext'))
                 final_list.append(test_chatbot_qna(model_name, mode='entity search+vector'))
-                
+
        except Exception as e:
            error_list.append((model_name, str(e)))
 
