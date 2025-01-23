@@ -89,7 +89,7 @@ def get_llm(model: str):
             )
 
             llm = ChatBedrock(
-                client=bedrock_client, model_id=model_name, model_kwargs=dict(temperature=0)
+                client=bedrock_client,region_name=region_name, model_id=model_name, model_kwargs=dict(temperature=0)
             )
 
         elif "ollama" in model:
@@ -168,7 +168,7 @@ async def get_graph_document_list(
     if "diffbot_api_key" in dir(llm):
         llm_transformer = llm
     else:
-        if "get_name" in dir(llm) and llm.get_name() != "ChatOenAI" or llm.get_name() != "ChatVertexAI" or llm.get_name() != "AzureChatOpenAI":
+        if "get_name" in dir(llm) and llm.get_name() != "ChatOpenAI" or llm.get_name() != "ChatVertexAI" or llm.get_name() != "AzureChatOpenAI":
             node_properties = False
             relationship_properties = False
         else:
@@ -189,6 +189,7 @@ async def get_graph_document_list(
     else:
         graph_document_list = await llm_transformer.aconvert_to_graph_documents(combined_chunk_document_list)
     return graph_document_list
+
 
 
 async def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship, additional_instructions=None):
