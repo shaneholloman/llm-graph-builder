@@ -40,7 +40,15 @@ import secrets
 logger = CustomLogger()
 CHUNK_DIR = os.path.join(os.path.dirname(__file__), "chunks")
 MERGED_DIR = os.path.join(os.path.dirname(__file__), "merged_files")
+from pydantic import BaseModel
 
+
+class Item(BaseModel):
+    question: str = "",
+    context: list[str] = [],
+    answer: list[str] = [] ,
+    model: str = "",
+    mode: list[str] =[]
 def healthy_condition():
     output = {"healthy": True}
     return output
@@ -867,20 +875,17 @@ async def retry_processing(uri=Form(), userName=Form(), password=Form(), databas
         gc.collect()    
 
 @app.post('/metric')
-async def calculate_metric(question: str = "",
-                           context: list[str] = [],
-                           answer: list[str] = [] ,
-                           model: str = "",
-                           mode: list[str] =[],
-                           ):
+async def calculate_metric(item:Item):
+    item_dict=item.dict()
+    print(item_dict);
     try:
         start = time.time()
-        context_list = [item.strip() for item in context]
-        answer_list = [item.strip() for item in answer]
-        mode_list = [item.strip() for item in mode]
+        context_list = item_dict['context']
+        answer_list = item_dict['answer']
+        mode_list = item_dict['mode']
 
         result = await asyncio.to_thread(
-            get_ragas_metrics, question, context_list, answer_list, model
+            get_ragas_metrics, item_dict['question'], context_list, answer_list, item_dict['model']
         )
         if result is None or "error" in result:
             return create_api_response(
@@ -891,9 +896,9 @@ async def calculate_metric(question: str = "",
         data = {mode: {metric: result[metric][i] for metric in result} for i, mode in enumerate(mode_list)}
         end = time.time()
         elapsed_time = end - start
-        json_obj = {'api_name':'metric', 'question':question, 'context':context, 'answer':answer, 'model':model,'mode':mode,
-                            'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}'}
-        logger.log_struct(json_obj, "INFO")
+        # json_obj = {'api_name':'metric', 'question':item_dict['question'], 'context':context_list, 'answer':item_dict['answer'], 'model':item_dict['model'],'mode':item_dict['mode'],
+        #                     'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}'}
+        # logger.log_struct(json_obj, "INFO")
         return create_api_response('Success', data=data)
     except Exception as e:
         logging.exception(f"Error while calculating evaluation metrics: {e}")

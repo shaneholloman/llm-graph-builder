@@ -1,5 +1,7 @@
 import { MetricsResponse } from '../types';
-import api from '../API/Index';
+// import api from '../API/Index';
+import axios from 'axios';
+import { url } from '../utils/Utils';
 
 export const getChatMetrics = async (
   question: string,
@@ -15,7 +17,7 @@ export const getChatMetrics = async (
   // formData.append('model', model);
   // formData.append('mode', JSON.stringify(mode));
   try {
-    const response = await api.post<MetricsResponse>(`/metric`, {
+    const response = await axios.post<MetricsResponse>(`${url()}/metric`, {
       question,
       context,
       answer,
