@@ -36,6 +36,8 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import HTMLResponse, RedirectResponse,JSONResponse
 from starlette.requests import Request
 import secrets
+from typing import Optional
+from src.ragas import ragas_metrics
 
 logger = CustomLogger()
 CHUNK_DIR = os.path.join(os.path.dirname(__file__), "chunks")
@@ -877,7 +879,7 @@ async def retry_processing(uri=Form(), userName=Form(), password=Form(), databas
 @app.post('/metric')
 async def calculate_metric(item:Item):
     item_dict=item.dict()
-    print(item_dict);
+    print(item_dict)
     try:
         start = time.time()
         context_list = item_dict['context']
@@ -931,6 +933,49 @@ async def calculate_additional_metrics(question: str = "",
                error=result.get("error", "Ragas evaluation returned null")
            )
        data = {mode: {metric: result[i][metric] for metric in result[i]} for i, mode in enumerate(mode_list)}
+       return create_api_response('Success', data=data)
+   except Exception as e:
+       logging.exception(f"Error while calculating evaluation metrics: {e}")
+       return create_api_response(
+           'Failed',
+           message="Error while calculating evaluation metrics",
+           error=str(e)
+       )
+   finally:
+       gc.collect()
+
+@app.post('/ragas_metrics')
+async def rags_metrics(question: str = Form(),
+                                        context: str = Form(),
+                                        answer: str = Form(),
+                                        reference: Optional[str] = Form(None),
+                                        model: str = Form(),
+                                        mode: str = Form(),
+):
+   print(question,type(question))
+   print(answer,type(answer))
+   print(mode,type(mode))
+   print(reference,type(reference))
+   print(model,type(model))
+   
+   try:
+       context_list = [str(item).strip() for item in json.loads(context)] if context else []
+       answer_list = [str(item).strip() for item in json.loads(answer)] if answer else []
+       mode_list = [str(item).strip() for item in json.loads(mode)] if mode else []
+       if reference:
+           result = await ragas_metrics(question, context_list,answer_list, model, reference)
+           print(result)
+       else:
+           result = await ragas_metrics(question, context_list,answer_list, model)
+           print(result)
+       if result is None or "error" in result:
+           return create_api_response(
+               'Failed',
+               message='Failed to calculate evaluation metrics.',
+               error=result.get("error", "Ragas evaluation returned null")
+           )
+       data = {mode: {metric: result[i][metric] for metric in result[i]} for i, mode in enumerate(mode_list)}
+       print('data',data)
        return create_api_response('Success', data=data)
    except Exception as e:
        logging.exception(f"Error while calculating evaluation metrics: {e}")
