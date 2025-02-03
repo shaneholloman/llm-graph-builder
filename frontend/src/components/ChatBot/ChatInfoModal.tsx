@@ -36,7 +36,6 @@ import MetricsTab from './MetricsTab';
 import { Stack } from '@mui/material';
 import { capitalizeWithUnderscore, getNodes } from '../../utils/Utils';
 import MultiModeMetrics from './MultiModeMetrics';
-import getAdditionalMetrics from '../../services/AdditionalMetrics';
 import { withVisibility } from '../../HOC/WithVisibility';
 import MetricsCheckbox from './MetricsCheckbox';
 
@@ -202,43 +201,33 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
   const loadMetrics = async () => {
     // @ts-ignore
     const referenceText = textAreaRef?.current?.value ?? '';
-    const metricsPromise = [];
     if (activeChatmodes != undefined && Object.keys(activeChatmodes).length <= 1) {
       setShowMetricsTable(true);
       const [defaultMode] = Object.keys(activeChatmodes);
       try {
         toggleMetricsLoading();
-        metricsPromise.push(
-          getChatMetrics(metricquestion, [metriccontexts], [metricanswer], metricmodel, [defaultMode])
-        );
-        if (referenceText.trim() != '') {
-          metricsPromise.push(
-            getAdditionalMetrics(metricquestion, [metriccontexts], [metricanswer], referenceText, metricmodel, [
-              defaultMode,
-            ])
-          );
+        let data;
+        if(referenceText.trim() != ''){
+          data=await getChatMetrics(metricquestion, [metriccontexts], [metricanswer], metricmodel, [defaultMode],referenceText)
           toggleReferenceVisibility();
+        }else{
+          data=await getChatMetrics(metricquestion, [metriccontexts], [metricanswer], metricmodel, [defaultMode])
         }
+        
 
-        const metricsResponse = await Promise.allSettled(metricsPromise);
-        const successresponse = [];
-        for (let index = 0; index < metricsResponse.length; index++) {
-          const metricPromise = metricsResponse[index];
-          if (metricPromise.status === 'fulfilled' && metricPromise.value.data.status === 'Success') {
-            successresponse.push(metricPromise.value.data.data);
-          }
-        }
-        setIsAdditionalMetricsWithSingleMode(successresponse.length === 2);
+
+        // setIsAdditionalMetricsWithSingleMode(successresponse.length === 2);
         toggleMetricsLoading();
-        const mergedState = successresponse.reduce((acc, cur) => {
-          if (acc[defaultMode]) {
-            acc[defaultMode] = { ...acc[defaultMode], ...cur[defaultMode] };
-          } else {
-            acc[defaultMode] = cur[defaultMode];
-          }
-          return acc;
-        }, {});
-        saveMetrics(mergedState[defaultMode]);
+        // const mergedState = successresponse.reduce((acc, cur) => {
+        //   if (acc[defaultMode]) {
+        //     acc[defaultMode] = { ...acc[defaultMode], ...cur[defaultMode] };
+        //   } else {
+        //     acc[defaultMode] = cur[defaultMode];
+        //   }
+        //   return acc;
+        // }, {});
+        // saveMetrics(mergedState[defaultMode]);
+        console.log({data})
       } catch (error) {
         if (error instanceof Error) {
           setShowMetricsTable(false);
@@ -262,36 +251,25 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
         return mode;
       });
       try {
-        metricsPromise.push(
-          getChatMetrics(metricquestion, contextarray as string[], answerarray as string[], metricmodel, modesarray)
-        );
+
+          
+        let response;
         if (referenceText.trim() != '') {
-          metricsPromise.push(
-            getAdditionalMetrics(
-              metricquestion,
-              contextarray as string[],
-              answerarray as string[],
-              referenceText,
-              metricmodel,
-              modesarray
-            )
-          );
+          response=await getChatMetrics(metricquestion, contextarray as string[], answerarray as string[], metricmodel, modesarray,referenceText)
           toggleReferenceVisibility();
+        }else{
+          response=await getChatMetrics(metricquestion, contextarray as string[], answerarray as string[], metricmodel, modesarray)
         }
-        const metricsResponse = await Promise.allSettled(metricsPromise);
+      
         toggleMetricsLoading();
-        const successResponse = [];
-        for (let index = 0; index < metricsResponse.length; index++) {
-          const metricPromise = metricsResponse[index];
-          if (metricPromise.status === 'fulfilled' && metricPromise.value.data.status === 'Success') {
-            successResponse.push(metricPromise.value.data.data);
-          }
-        }
-        setIsAdditionalMetricsEnabled(successResponse.length === 2);
-        const metricsdata = Object.entries(mergeNestedObjects(successResponse)).map(([mode, scores]) => {
-          return { mode, ...scores };
-        });
-        saveMultimodemetrics(metricsdata);
+        // const successResponse = [];
+        
+        // setIsAdditionalMetricsEnabled(successResponse.length === 2);
+        // const metricsdata = Object.entries(mergeNestedObjects(successResponse)).map(([mode, scores]) => {
+        //   return { mode, ...scores };
+        // });
+        // saveMultimodemetrics(metricsdata);
+        console.log({response})
       } catch (error) {
         setShowMultiModeMetrics(false);
         toggleMetricsLoading();

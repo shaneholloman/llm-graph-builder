@@ -8,7 +8,8 @@ export const getChatMetrics = async (
   context: string[],
   answer: string[],
   model: string,
-  mode: string[]
+  mode: string[],
+  referenceText?:string
 ) => {
   // const formData = new FormData();
   // formData.append('question', question);
@@ -17,12 +18,13 @@ export const getChatMetrics = async (
   // formData.append('model', model);
   // formData.append('mode', JSON.stringify(mode));
   try {
-    const response = await axios.post<MetricsResponse>(`${url()}/metric`, {
+    const response = await axios.post<MetricsResponse>(`${url()}/ragas_metrics`, {
       question,
       context,
       answer,
       model,
-      mode
+      mode,
+      reference:referenceText
     });
     return response;
   } catch (error) {
