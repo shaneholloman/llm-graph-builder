@@ -51,6 +51,16 @@ class Item(BaseModel):
     answer: list[str] = [] ,
     model: str = "",
     mode: list[str] =[]
+    
+class Ragas_Item(BaseModel):
+    question: str = "",
+    context: list[str] = [],
+    answer: list[str] = [],
+    reference: Optional[str] = None,
+    model: str = "",
+    mode: list[str] = []
+
+    
 def healthy_condition():
     output = {"healthy": True}
     return output
@@ -945,29 +955,22 @@ async def calculate_additional_metrics(question: str = "",
        gc.collect()
 
 @app.post('/ragas_metrics')
-async def rags_metrics(question: str = Form(),
-                                        context: str = Form(),
-                                        answer: str = Form(),
-                                        reference: Optional[str] = Form(None),
-                                        model: str = Form(),
-                                        mode: str = Form(),
-):
-   print(question,type(question))
-   print(answer,type(answer))
-   print(mode,type(mode))
-   print(reference,type(reference))
-   print(model,type(model))
-   
+async def rags_metrics(metric:Ragas_Item): 
+   item_dict=metric.dict()  
    try:
-       context_list = [str(item).strip() for item in json.loads(context)] if context else []
-       answer_list = [str(item).strip() for item in json.loads(answer)] if answer else []
-       mode_list = [str(item).strip() for item in json.loads(mode)] if mode else []
+       question = item_dict['question']
+       context_list = item_dict['context']
+       answer_list = item_dict['answer']
+       mode_list = item_dict['mode']
+       model = item_dict['model']
+       if item_dict['reference'] :
+           reference = item_dict['reference']
        if reference:
            result = await ragas_metrics(question, context_list,answer_list, model, reference)
-           print(result)
+           
        else:
            result = await ragas_metrics(question, context_list,answer_list, model)
-           print(result)
+           
        if result is None or "error" in result:
            return create_api_response(
                'Failed',
