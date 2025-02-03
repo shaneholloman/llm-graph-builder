@@ -56,7 +56,7 @@ class Ragas_Item(BaseModel):
     question: str = "",
     context: list[str] = [],
     answer: list[str] = [],
-    reference: Optional[str] = None,
+    reference: Optional[str] =None,
     model: str = "",
     mode: list[str] = []
 
@@ -960,26 +960,32 @@ async def rags_metrics(metric:Ragas_Item):
    try:
        question = item_dict['question']
        context_list = item_dict['context']
+    
        answer_list = item_dict['answer']
        mode_list = item_dict['mode']
        model = item_dict['model']
        if item_dict['reference'] :
            reference = item_dict['reference']
-       if reference:
-           result = await ragas_metrics(question, context_list,answer_list, model, reference)
+       
+       print(reference,type(reference))
+       if type(reference) is tuple:
            
+           result = await ragas_metrics(question, context_list,answer_list, model)                
        else:
-           result = await ragas_metrics(question, context_list,answer_list, model)
            
+           result = await ragas_metrics(question, context_list,answer_list, model, reference)
+            
        if result is None or "error" in result:
            return create_api_response(
                'Failed',
                message='Failed to calculate evaluation metrics.',
                error=result.get("error", "Ragas evaluation returned null")
            )
+
        data = {mode: {metric: result[i][metric] for metric in result[i]} for i, mode in enumerate(mode_list)}
-       print('data',data)
+       print(data)
        return create_api_response('Success', data=data)
+        
    except Exception as e:
        logging.exception(f"Error while calculating evaluation metrics: {e}")
        return create_api_response(
