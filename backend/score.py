@@ -42,9 +42,45 @@ from src.ragas import ragas_metrics
 logger = CustomLogger()
 CHUNK_DIR = os.path.join(os.path.dirname(__file__), "chunks")
 MERGED_DIR = os.path.join(os.path.dirname(__file__), "merged_files")
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 
+class Schema(BaseModel):
+    uri: str  = "",
+    userName: str = "",
+    database: str = "",
+    password: str = "",
 
+class Schema_Email(Schema):
+    email:str=""  
+    
+class Fetch_Chunktext(Schema):
+    document_name: str = "",
+    page_no: int = Field(default=1)
+    email: str = ""
+    
+class Retry_processing(Schema):
+    file_name: str = "",
+    retry_condition: str = "",
+    email: str = ""
+    
+class Drop_create_vector_index(Schema):
+    isVectorIndexExist: str = "",
+    email: str = ""
+    
+class Merge_duplicate_nodes(Schema):
+    duplicate_nodes_list:str="",
+    email:str = ""
+    
+class Delete_unconnected_nodes(Schema):
+    unconnected_entities_list:str="",
+    email:str=""
+    
+class Delete_document_and_entities(Schema):
+    filenames:str="",
+    source_types:str="",
+    deleteEntities:str="",
+    email:str=""
+    
 class Item(BaseModel):
     question: str = "",
     context: list[str] = [],
@@ -60,7 +96,8 @@ class Ragas_Item(BaseModel):
     model: str = "",
     mode: list[str] = []
 
-    
+
+
 def healthy_condition():
     output = {"healthy": True}
     return output
@@ -120,23 +157,21 @@ app.add_api_route("/health", health([healthy_condition, healthy]))
 
 
 @app.post("/url/scan")
-async def create_source_knowledge_graph_url(
-    uri=Form(),
-    userName=Form(),
-    password=Form(),
-    source_url=Form(None),
-    database=Form(),
-    aws_access_key_id=Form(None),
-    aws_secret_access_key=Form(None),
-    wiki_query=Form(None),
-    model=Form(),
-    gcs_bucket_name=Form(None),
-    gcs_bucket_folder=Form(None),
-    source_type=Form(None),
-    gcs_project_id=Form(None),
-    access_token=Form(None),
-    email=Form()
-    ):
+async def create_source_knowledge_graph_url(uri=Form(),
+userName=Form(),
+password=Form(),
+source_url=Form(None),
+database=Form(),
+aws_access_key_id=Form(None),
+aws_secret_access_key=Form(None),
+wiki_query=Form(None),
+model=Form(),
+gcs_bucket_name=Form(None),
+gcs_bucket_folder=Form(None),
+source_type=Form(None),
+gcs_project_id=Form(None),
+access_token=Form(None),
+email=Form()):
     
     try:
         start = time.time()
@@ -522,8 +557,14 @@ async def clear_chat_bot(uri=Form(),userName=Form(), password=Form(), database=F
         gc.collect()
             
 @app.post("/connect")
-async def connect(uri=Form(), userName=Form(), password=Form(), database=Form(),email=Form()):
+async def connect(connect:Schema_Email):
     try:
+        get_schema = connect.dict()
+        uri = get_schema['uri']
+        userName = get_schema['userName']
+        password = get_schema['password']
+        database = get_schema['database']
+        email = get_schema['email']
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         result = await asyncio.to_thread(connection_check_and_get_vector_dimensions, graph, database)
@@ -571,8 +612,14 @@ async def upload_large_file_into_chunks(file:UploadFile = File(...), chunkNumber
         gc.collect()
             
 @app.post("/schema")
-async def get_structured_schema(uri=Form(), userName=Form(), password=Form(), database=Form(),email=Form()):
+async def get_structured_schema(get_schema:Schema_Email):
     try:
+        get_schema = get_schema.dict()
+        uri = get_schema['uri']
+        userName = get_schema['userName']
+        password = get_schema['password']
+        database = get_schema['database']
+        email = get_schema['email']
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         result = await asyncio.to_thread(get_labels_and_relationtypes, graph)
@@ -644,16 +691,20 @@ async def update_extract_status(request:Request, file_name, url, userName, passw
     
     return EventSourceResponse(generate(),ping=60)
 
+
+    
 @app.post("/delete_document_and_entities")
-async def delete_document_and_entities(uri=Form(), 
-                                       userName=Form(), 
-                                       password=Form(), 
-                                       database=Form(), 
-                                       filenames=Form(),
-                                       source_types=Form(),
-                                       deleteEntities=Form(),
-                                       email=Form()):
+async def delete_document_and_entities(delete_document_and_entities: Delete_document_and_entities):
     try:
+        delete_document_and_entities = delete_document_and_entities.dict()
+        uri =  delete_document_and_entities['uri']
+        userName = delete_document_and_entities['userName']
+        password = delete_document_and_entities['password']
+        database = delete_document_and_entities['database']
+        filenames = delete_document_and_entities['filenames']
+        source_types = delete_document_and_entities['source_types']
+        deleteEntities =  delete_document_and_entities['deleteEntities']
+        email =  delete_document_and_entities['email']
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         graphDb_data_Access = graphDBdataAccess(graph)
@@ -755,8 +806,14 @@ async def populate_graph_schema(input_text=Form(None), model=Form(None), is_sche
         gc.collect()
         
 @app.post("/get_unconnected_nodes_list")
-async def get_unconnected_nodes_list(uri=Form(), userName=Form(), password=Form(), database=Form(),email=Form()):
+async def get_unconnected_nodes_list(get_unconnected_nodes_list:Schema_Email):
     try:
+        get_unconnected_nodes_list = get_unconnected_nodes_list.dict()
+        uri = get_unconnected_nodes_list['uri']
+        userName = get_unconnected_nodes_list['userName']
+        password = get_unconnected_nodes_list['password']
+        database = get_unconnected_nodes_list['database']
+        email = get_unconnected_nodes_list['email'] 
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         graphDb_data_Access = graphDBdataAccess(graph)
@@ -774,10 +831,19 @@ async def get_unconnected_nodes_list(uri=Form(), userName=Form(), password=Form(
         return create_api_response(job_status, message=message, error=error_message)
     finally:
         gc.collect()
-        
+
+
+          
 @app.post("/delete_unconnected_nodes")
-async def delete_orphan_nodes(uri=Form(), userName=Form(), password=Form(), database=Form(),unconnected_entities_list=Form(),email=Form()):
+async def delete_orphan_nodes(delete_unconnected_list:Delete_unconnected_nodes):
     try:
+        delete_unconnected_list = delete_unconnected_list.dict()
+        uri = delete_unconnected_list['uri']
+        userName = delete_unconnected_list['userName']
+        password = delete_unconnected_list['password']
+        database = delete_unconnected_list['database']
+        unconnected_entities_list= delete_unconnected_list['unconnected_entities_list']
+        email = delete_unconnected_list['email'] 
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         graphDb_data_Access = graphDBdataAccess(graph)
@@ -797,8 +863,14 @@ async def delete_orphan_nodes(uri=Form(), userName=Form(), password=Form(), data
         gc.collect()
         
 @app.post("/get_duplicate_nodes")
-async def get_duplicate_nodes(uri=Form(), userName=Form(), password=Form(), database=Form(),email=Form()):
+async def get_duplicate_nodes(get_duplicate_nodes:Schema_Email):
     try:
+        get_duplicate_nodes = get_duplicate_nodes.dict()
+        uri = get_duplicate_nodes['uri']
+        userName = get_duplicate_nodes['userName']
+        password = get_duplicate_nodes['password']
+        database = get_duplicate_nodes['database']
+        email = get_duplicate_nodes['email'] 
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         graphDb_data_Access = graphDBdataAccess(graph)
@@ -816,10 +888,20 @@ async def get_duplicate_nodes(uri=Form(), userName=Form(), password=Form(), data
         return create_api_response(job_status, message=message, error=error_message)
     finally:
         gc.collect()
-        
+ 
+
+
+           
 @app.post("/merge_duplicate_nodes")
-async def merge_duplicate_nodes(uri=Form(), userName=Form(), password=Form(), database=Form(),duplicate_nodes_list=Form(),email=Form()):
+async def merge_duplicate_nodes(merge_duplicate_nodes: Merge_duplicate_nodes):
     try:
+        merge_duplicate_nodes=merge_duplicate_nodes.dict()
+        uri = merge_duplicate_nodes['uri']
+        userName = merge_duplicate_nodes['userName']
+        password = merge_duplicate_nodes['password']
+        database = merge_duplicate_nodes['database']
+        duplicate_nodes_list = merge_duplicate_nodes['duplicate_nodes_list']
+        email = merge_duplicate_nodes['email']
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
         graphDb_data_Access = graphDBdataAccess(graph)
@@ -840,7 +922,14 @@ async def merge_duplicate_nodes(uri=Form(), userName=Form(), password=Form(), da
         gc.collect()
         
 @app.post("/drop_create_vector_index")
-async def drop_create_vector_index(uri=Form(), userName=Form(), password=Form(), database=Form(), isVectorIndexExist=Form(),email=Form()):
+async def drop_create_vector_index(drop_create_vector_index:Drop_create_vector_index):
+    vector_index = drop_create_vector_index.dict()
+    uri = vector_index['uri']
+    userName = vector_index['userName']
+    password = vector_index['password']
+    database = vector_index['database']
+    isVectorIndexExist = vector_index['isVectorIndexExist']
+    email = vector_index['email']
     try:
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
@@ -862,7 +951,15 @@ async def drop_create_vector_index(uri=Form(), userName=Form(), password=Form(),
         gc.collect()
         
 @app.post("/retry_processing")
-async def retry_processing(uri=Form(), userName=Form(), password=Form(), database=Form(), file_name=Form(), retry_condition=Form(), email=Form()):
+async def retry_processing(retry_processing:Retry_processing):
+    processing = retry_processing.dict()
+    uri = processing['uri']
+    userName = processing['userName']
+    password = processing['password']
+    database = processing['database'] 
+    file_name = processing['file_name']
+    retry_condition = processing['retry_condition']
+    email = processing['email']
     try:
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
@@ -997,15 +1094,15 @@ async def rags_metrics(metric:Ragas_Item):
        gc.collect()
 
 @app.post("/fetch_chunktext")
-async def fetch_chunktext(
-   uri: str = Form(),
-   database: str = Form(),
-   userName: str = Form(),
-   password: str = Form(),
-   document_name: str = Form(),
-   page_no: int = Form(1),
-   email=Form()
-):
+async def fetch_chunktext(Fetch_Chunktext:Fetch_Chunktext):
+   fetch_chunk = Fetch_Chunktext.dict()
+   uri = fetch_chunk['uri']
+   userName = fetch_chunk['userName']
+   password = fetch_chunk['password']
+   database = fetch_chunk['database'] 
+   document_name = fetch_chunk['document_name']
+   page_no = fetch_chunk['page_no']
+   email = fetch_chunk['email']
    try:
        start = time.time()
        result = await asyncio.to_thread(
@@ -1085,9 +1182,17 @@ async def backend_connection_configuration():
         return create_api_response(job_status, message=message, error=error_message.rstrip('.') + ', or fill from the login dialog.', data=graph_connection)
     finally:
         gc.collect()
-    
+
+   
 @app.post("/schema_visualization")
-async def get_schema_visualization(uri=Form(), userName=Form(), password=Form(), database=Form()):
+async def get_schema_visualization(schema:Schema):
+    schema=schema.dict()  
+   
+    uri = schema['uri']
+    userName = schema['userName']
+    password = schema['password']
+    database = schema['database']
+   
     try:
         start = time.time()
         result = await asyncio.to_thread(visualize_schema,
