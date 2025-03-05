@@ -18,18 +18,12 @@ import { ExtendedNode, chatInfoMessage } from '../../types';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import GraphViewButton from '../Graph/GraphViewButton';
 import { chunkEntitiesAPI } from '../../services/ChunkEntitiesInfo';
-import { useCredentials } from '../../context/UserCredentials';
 import { tokens } from '@neo4j-ndl/base';
 import ChunkInfo from './ChunkInfo';
 import EntitiesInfo from './EntitiesInfo';
 import SourcesInfo from './SourcesInfo';
 import CommunitiesInfo from './CommunitiesInfo';
-import {
-  chatModeLables,
-  chatModeReadableLables,
-  mergeNestedObjects,
-  supportedLLmsForRagas,
-} from '../../utils/Constants';
+import { chatModeLables, chatModeReadableLables, supportedLLmsForRagas } from '../../utils/Constants';
 import { Relationship } from '@neo4j-nvl/base';
 import { getChatMetrics } from '../../services/GetRagasMetric';
 import MetricsTab from './MetricsTab';
@@ -73,7 +67,6 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
   saveMetrics,
   toggleInfoLoading,
   toggleMetricsLoading,
-  saveMultimodemetrics,
 }) => {
   const { breakpoints } = tokens;
   const isTablet = useMediaQuery(`(min-width:${breakpoints.xs}) and (max-width: ${breakpoints.lg})`);
@@ -86,7 +79,6 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
       ? 4
       : 3
   );
-  const { userCredentials } = useCredentials();
   const [, copy] = useCopyToClipboard();
   const [copiedText, setcopiedText] = useState<boolean>(false);
   const [showMetricsTable, setShowMetricsTable] = useState<boolean>(Boolean(metricDetails));
@@ -94,6 +86,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
   const [multiModeError, setMultiModeError] = useState<string>('');
   const [enableReference, toggleReferenceVisibility] = useReducer((state: boolean) => !state, false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  // @ts-ignore
   const [isAdditionalMetricsEnabled, setIsAdditionalMetricsEnabled] = useState<boolean | null>(
     multiModelMetrics.length > 0 && Object.keys(multiModelMetrics[0]).length > 4
       ? true
@@ -101,6 +94,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
       ? false
       : null
   );
+  // @ts-ignore
   const [isAdditionalMetricsWithSingleMode, setIsAdditionalMetricsWithSingleMode] = useState<boolean | null>(
     metricDetails != undefined && Object.keys(metricDetails).length > 3
       ? true
@@ -108,7 +102,6 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
       ? false
       : null
   );
-
   const actions: React.ComponentProps<typeof IconButton<'button'>>[] = useMemo(
     () => [
       {
@@ -133,6 +126,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
   );
 
   useEffect(() => {
+    const abortcontroller = new AbortController();
     if (
       (mode != chatModeLables.graph || error?.trim() !== '') &&
       (!nodes.length || !infoEntities.length || !chunks.length)
@@ -140,7 +134,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
       (async () => {
         toggleInfoLoading();
         try {
-          const response = await chunkEntitiesAPI(userCredentials?.database, nodeDetails, entities_ids, mode);
+          const response = await chunkEntitiesAPI(nodeDetails, entities_ids, mode, abortcontroller.signal);
           if (response.data.status === 'Failure') {
             throw new Error(response.data.error);
           }
@@ -192,6 +186,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
       if (metricsLoading) {
         toggleMetricsLoading();
       }
+      abortcontroller.abort();
     };
   }, [nodeDetails, mode, error, metricsLoading]);
 
@@ -207,14 +202,19 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
       try {
         toggleMetricsLoading();
         let data;
-        if(referenceText.trim() != ''){
-          data=await getChatMetrics(metricquestion, [metriccontexts], [metricanswer], metricmodel, [defaultMode],referenceText)
+        if (referenceText.trim() != '') {
+          data = await getChatMetrics(
+            metricquestion,
+            [metriccontexts],
+            [metricanswer],
+            metricmodel,
+            [defaultMode],
+            referenceText
+          );
           toggleReferenceVisibility();
-        }else{
-          data=await getChatMetrics(metricquestion, [metriccontexts], [metricanswer], metricmodel, [defaultMode])
+        } else {
+          data = await getChatMetrics(metricquestion, [metriccontexts], [metricanswer], metricmodel, [defaultMode]);
         }
-        
-
 
         // setIsAdditionalMetricsWithSingleMode(successresponse.length === 2);
         toggleMetricsLoading();
@@ -227,7 +227,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
         //   return acc;
         // }, {});
         // saveMetrics(mergedState[defaultMode]);
-        console.log({data})
+        console.log({ data });
       } catch (error) {
         if (error instanceof Error) {
           setShowMetricsTable(false);
@@ -251,25 +251,36 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
         return mode;
       });
       try {
-
-          
         let response;
         if (referenceText.trim() != '') {
-          response=await getChatMetrics(metricquestion, contextarray as string[], answerarray as string[], metricmodel, modesarray,referenceText)
+          response = await getChatMetrics(
+            metricquestion,
+            contextarray as string[],
+            answerarray as string[],
+            metricmodel,
+            modesarray,
+            referenceText
+          );
           toggleReferenceVisibility();
-        }else{
-          response=await getChatMetrics(metricquestion, contextarray as string[], answerarray as string[], metricmodel, modesarray)
+        } else {
+          response = await getChatMetrics(
+            metricquestion,
+            contextarray as string[],
+            answerarray as string[],
+            metricmodel,
+            modesarray
+          );
         }
-      
+
         toggleMetricsLoading();
         // const successResponse = [];
-        
+
         // setIsAdditionalMetricsEnabled(successResponse.length === 2);
         // const metricsdata = Object.entries(mergeNestedObjects(successResponse)).map(([mode, scores]) => {
         //   return { mode, ...scores };
         // });
         // saveMultimodemetrics(metricsdata);
-        console.log({response})
+        console.log({ response });
       } catch (error) {
         setShowMultiModeMetrics(false);
         toggleMetricsLoading();
@@ -294,13 +305,13 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
   );
   return (
     <div className='n-bg-palette-neutral-bg-weak p-4'>
-      <div className='flex flex-row pb-6 items-center mb-2'>
+      <div className='flex! flex-row pb-6 items-center mb-2'>
         <img
           src={Neo4jRetrievalLogo}
           style={{ width: isTablet ? 80 : 95, height: isTablet ? 80 : 95, marginRight: 10 }}
           loading='lazy'
         />
-        <div className='flex flex-col'>
+        <div className='flex! flex-col'>
           <Typography variant='h2'>Retrieval information</Typography>
           <Typography variant='body-medium' className='mb-2'>
             To generate this response, the process took <span className='font-bold'>{response_time} seconds,</span>
@@ -478,7 +489,7 @@ const ChatInfoModal: React.FC<chatInfoMessage> = ({
         )}
       </Flex>
       {activeTab == 4 && nodes?.length && relationships?.length && mode !== chatModeLables.graph ? (
-        <div className='button-container flex mt-2 justify-center'>
+        <div className='button-container flex! mt-2 justify-center'>
           <GraphViewButton
             nodeValues={nodes}
             relationshipValues={relationships}

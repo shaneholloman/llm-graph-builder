@@ -16,13 +16,14 @@ import { IconButtonWithToolTip } from '../UI/IconButtonToolTip';
 import { buttonCaptions, SKIP_AUTH, tooltips } from '../../utils/Constants';
 import { ThemeWrapperContext } from '../../context/ThemeWrapper';
 import { useCredentials } from '../../context/UserCredentials';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useMessageContext } from '../../context/UserMessages';
 import { RiChatSettingsLine } from 'react-icons/ri';
 import ChatModeToggle from '../ChatBot/ChatModeToggle';
 import { connectionState } from '../../types';
 import { downloadClickHandler, getIsLoading } from '../../utils/Utils';
 import Profile from '../User/Profile';
+import { useAuth0 } from '@auth0/auth0-react';
 
 interface HeaderProp {
   chatOnly?: boolean;
@@ -39,29 +40,32 @@ const Header: React.FC<HeaderProp> = ({ chatOnly, deleteOnClick, setOpenConnecti
     window.open(url, '_blank');
   }, []);
   const downloadLinkRef = useRef<HTMLAnchorElement>(null);
+  const { loginWithRedirect } = useAuth0();
+
   const { connectionStatus } = useCredentials();
   const chatAnchor = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
   const [showChatModeOption, setShowChatModeOption] = useState<boolean>(false);
   const openChatPopout = useCallback(() => {
     let session = localStorage.getItem('neo4j.connection');
     const isLoading = getIsLoading(messages);
     if (session) {
       const neo4jConnection = JSON.parse(session);
-      const { uri } = neo4jConnection;
-      const userName = neo4jConnection.user;
-      const { password } = neo4jConnection;
-      const { database } = neo4jConnection;
+      const { uri, userName, password, database } = neo4jConnection;
       const [, port] = uri.split(':');
       const encodedPassword = btoa(password);
       const chatUrl = `/chat-only?uri=${encodeURIComponent(
         uri
       )}&user=${userName}&password=${encodedPassword}&database=${database}&port=${port}&connectionStatus=${connectionStatus}`;
       navigate(chatUrl, { state: { messages, isLoading } });
+    } else if (connectionStatus) {
+      const chatUrl = `/chat-only?connectionStatus=${connectionStatus}`;
+      navigate(chatUrl, { state: { messages, isLoading } });
     } else {
       const chatUrl = `/chat-only?openModal=true`;
       window.open(chatUrl, '_blank');
     }
-  }, [messages]);
+  }, [messages, connectionStatus, navigate]);
 
   const onBackButtonClick = () => {
     navigate('/', { state: messages });
@@ -83,7 +87,7 @@ const Header: React.FC<HeaderProp> = ({ chatOnly, deleteOnClick, setOpenConnecti
             <Typography variant='h6' as='a' href='#app-bar-with-responsive-menu'>
               <img
                 src={colorMode === 'dark' ? Neo4jLogoBW : Neo4jLogoColor}
-                className='h-8 min-h-8 min-w-8'
+                className='h-8! min-h-8 min-w-8'
                 alt='Neo4j Logo'
               />
             </Typography>
@@ -144,6 +148,11 @@ const Header: React.FC<HeaderProp> = ({ chatOnly, deleteOnClick, setOpenConnecti
                     <ArrowTopRightOnSquareIconOutline />
                   </IconButtonWithToolTip>
                   {!SKIP_AUTH && <Profile />}
+                  {pathname === '/readonly' && (
+                    <Button type='button' fill='outlined' onClick={() => loginWithRedirect()}>
+                      Login
+                    </Button>
+                  )}
                 </div>
               </div>
             </section>
@@ -229,7 +238,7 @@ const Header: React.FC<HeaderProp> = ({ chatOnly, deleteOnClick, setOpenConnecti
                     <ArrowDownTrayIconOutline />
                   </IconButtonWithToolTip>
                   <>
-                    <TextLink ref={downloadLinkRef} className='!hidden'>
+                    <TextLink ref={downloadLinkRef} className='hidden!'>
                       ""
                     </TextLink>
                   </>

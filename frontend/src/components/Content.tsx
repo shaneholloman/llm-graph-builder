@@ -1,6 +1,6 @@
-import { useEffect, useState, useMemo, useRef, Suspense, useReducer, useCallback } from 'react';
+import { useEffect, useState, useMemo, useRef, Suspense, useReducer, useCallback, useContext } from 'react';
 import FileTable from './FileTable';
-import { Button, Typography, Flex, StatusIndicator, useMediaQuery } from '@neo4j-ndl/react';
+import { Button, Typography, Flex, StatusIndicator, useMediaQuery, Menu } from '@neo4j-ndl/react';
 import { useCredentials } from '../context/UserCredentials';
 import { useFileContext } from '../context/UsersFiles';
 import { extractAPI } from '../utils/FileAPI';
@@ -17,6 +17,9 @@ import {
   llms,
   RETRY_OPIONS,
   tooltips,
+  tokenchunkSize,
+  chunkOverlap,
+  chunksToCombine,
 } from '../utils/Constants';
 import ButtonWithToolTip from './UI/ButtonWithToolTip';
 import DropdownComponent from './Dropdown';
@@ -29,14 +32,16 @@ import { tokens } from '@neo4j-ndl/base';
 import axios from 'axios';
 import DatabaseStatusIcon from './UI/DatabaseStatusIcon';
 import RetryConfirmationDialog from './Popups/RetryConfirmation/Index';
-import retry from '../services/retry';
-import { showErrorToast, showNormalToast, showSuccessToast } from '../utils/toasts';
+import retry from '../services/Retry';
+import { showErrorToast, showNormalToast, showSuccessToast } from '../utils/Toasts';
 import { useMessageContext } from '../context/UserMessages';
 import PostProcessingToast from './Popups/GraphEnhancementDialog/PostProcessingCheckList/PostProcessingToast';
 import { getChunkText } from '../services/getChunkText';
 import ChunkPopUp from './Popups/ChunkPopUp';
 import { isExpired, isFileReadyToProcess } from '../utils/Utils';
 import { useHasSelections } from '../hooks/useHasSelections';
+import { ChevronUpIconOutline, ChevronDownIconOutline } from '@neo4j-ndl/react/icons';
+import { ThemeWrapperContext } from '../context/ThemeWrapper';
 
 const ConfirmationDialog = lazy(() => import('./Popups/LargeFilePopUp/ConfirmationDialog'));
 
@@ -51,7 +56,6 @@ const Content: React.FC<ContentProps> = ({
 }) => {
   const { breakpoints } = tokens;
   const isTablet = useMediaQuery(`(min-width:${breakpoints.xs}) and (max-width: ${breakpoints.lg})`);
-  // const [init, setInit] = useState<boolean>(false);
   const [openGraphView, setOpenGraphView] = useState<boolean>(false);
   const [inspectedName, setInspectedName] = useState<string>('');
   const [documentName, setDocumentName] = useState<string>('');
@@ -68,6 +72,10 @@ const Content: React.FC<ContentProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [totalPageCount, setTotalPageCount] = useState<number | null>(null);
   const [textChunks, setTextChunks] = useState<chunkdata[]>([]);
+  const [isGraphBtnMenuOpen, setIsGraphBtnMenuOpen] = useState<boolean>(false);
+  const graphbtnRef = useRef<HTMLDivElement>(null);
+  const chunksTextAbortController = useRef<AbortController>();
+  const { colorMode } = useContext(ThemeWrapperContext);
 
   const [alertStateForRetry, setAlertStateForRetry] = useState<BannerAlertProps>({
     showAlert: false,
@@ -81,9 +89,15 @@ const Content: React.FC<ContentProps> = ({
     setModel,
     selectedNodes,
     selectedRels,
+    selectedTokenChunkSize,
+    selectedChunk_overlap,
+    selectedChunks_to_combine,
     setSelectedNodes,
     setRowSelection,
     setSelectedRels,
+    setSelectedTokenChunkSize,
+    setSelectedChunk_overlap,
+    setSelectedChunks_to_combine,
     postProcessingTasks,
     queue,
     processedCount,
@@ -93,9 +107,9 @@ const Content: React.FC<ContentProps> = ({
     additionalInstructions,
     setAdditionalInstructions,
   } = useFileContext();
-  const [viewPoint, setViewPoint] = useState<'tableView' | 'showGraphView' | 'chatInfoView' | 'neighborView'>(
-    'tableView'
-  );
+  const [viewPoint, setViewPoint] = useState<
+    'tableView' | 'showGraphView' | 'chatInfoView' | 'neighborView' | 'showSchemaView'
+  >('tableView');
   const [showDeletePopUp, setShowDeletePopUp] = useState<boolean>(false);
   const [deleteLoading, setIsDeleteLoading] = useState<boolean>(false);
 
@@ -211,8 +225,9 @@ const Content: React.FC<ContentProps> = ({
     });
   };
   const getChunks = async (name: string, pageNo: number) => {
+    chunksTextAbortController.current = new AbortController();
     toggleChunksLoading();
-    const response = await getChunkText(name, pageNo);
+    const response = await getChunkText(name, pageNo, chunksTextAbortController.current.signal);
     setTextChunks(response.data.data.pageitems);
     if (!totalPageCount) {
       setTotalPageCount(response.data.data.total_pages);
@@ -261,14 +276,7 @@ const Content: React.FC<ContentProps> = ({
       });
       if (fileItem.name != undefined && userCredentials != null) {
         const { name } = fileItem;
-        triggerStatusUpdateAPI(
-          name as string,
-          userCredentials?.uri,
-          userCredentials?.userName,
-          userCredentials?.password,
-          userCredentials?.database,
-          updateStatusForLargeFiles
-        );
+        triggerStatusUpdateAPI(name as string, userCredentials, updateStatusForLargeFiles);
       }
 
       const apiResponse = await extractAPI(
@@ -283,6 +291,9 @@ const Content: React.FC<ContentProps> = ({
         fileItem.gcsBucketFolder ?? '',
         selectedNodes.map((l) => l.value),
         selectedRels.map((t) => t.value),
+        selectedTokenChunkSize,
+        selectedChunk_overlap,
+        selectedChunks_to_combine,
         fileItem.googleProjectId,
         fileItem.language,
         fileItem.accessToken,
@@ -531,13 +542,16 @@ const Content: React.FC<ContentProps> = ({
 
   const handleOpenGraphClick = () => {
     const bloomUrl = process.env.VITE_BLOOM_URL;
-    const uriCoded = userCredentials?.uri.replace(/:\d+$/, '');
-    const connectURL = `${uriCoded?.split('//')[0]}//${userCredentials?.userName}@${uriCoded?.split('//')[1]}:${
-      userCredentials?.port ?? '7687'
-    }`;
-    const encodedURL = encodeURIComponent(connectURL);
-    const replacedUrl = bloomUrl?.replace('{CONNECT_URL}', encodedURL);
-    window.open(replacedUrl, '_blank');
+    let finalUrl = bloomUrl;
+    if (userCredentials?.database && userCredentials.uri && userCredentials.userName) {
+      const uriCoded = userCredentials.uri.replace(/:\d+$/, '');
+      const connectURL = `${uriCoded.split('//')[0]}//${userCredentials.userName}@${uriCoded.split('//')[1]}:${
+        userCredentials.port ?? '7687'
+      }`;
+      const encodedURL = encodeURIComponent(connectURL);
+      finalUrl = bloomUrl?.replace('{CONNECT_URL}', encodedURL);
+    }
+    window.open(finalUrl, '_blank');
   };
 
   const handleGraphView = () => {
@@ -555,6 +569,12 @@ const Content: React.FC<ContentProps> = ({
     setUserCredentials({ uri: '', password: '', userName: '', database: '', email: '' });
     setSelectedNodes([]);
     setSelectedRels([]);
+    localStorage.removeItem('selectedTokenChunkSize');
+    setSelectedTokenChunkSize(tokenchunkSize);
+    localStorage.removeItem('selectedChunk_overlap');
+    setSelectedChunk_overlap(chunkOverlap);
+    localStorage.removeItem('selectedChunks_to_combine');
+    setSelectedChunks_to_combine(chunksToCombine);
     localStorage.removeItem('instructions');
     setAdditionalInstructions('');
     setMessages([
@@ -757,6 +777,11 @@ const Content: React.FC<ContentProps> = ({
     });
   }, []);
 
+  const handleSchemaView = () => {
+    setOpenGraphView(true);
+    setViewPoint('showSchemaView');
+  };
+
   return (
     <>
       <RetryConfirmationDialog
@@ -833,7 +858,10 @@ const Content: React.FC<ContentProps> = ({
       {showChunkPopup && (
         <ChunkPopUp
           chunksLoading={chunksLoading}
-          onClose={() => toggleChunkPopup()}
+          onClose={() => {
+            chunksTextAbortController.current?.abort();
+            toggleChunkPopup();
+          }}
           showChunkPopup={showChunkPopup}
           chunks={textChunks}
           incrementPage={incrementPage}
@@ -863,12 +891,8 @@ const Content: React.FC<ContentProps> = ({
           <div className='connectionstatus__container'>
             <span className='h6 px-1'>Neo4j connection {isReadOnlyUser ? '(Read only Mode)' : ''}</span>
             <Typography variant='body-medium'>
-              <DatabaseStatusIcon
-                isConnected={connectionStatus}
-                isGdsActive={isGdsActive}
-                uri={userCredentials && userCredentials?.uri}
-              />
-              <div className='pt-1 flex gap-1 items-center'>
+              <DatabaseStatusIcon isConnected={connectionStatus} isGdsActive={isGdsActive} uri={userCredentials?.uri} />
+              <div className='pt-1 flex! gap-1 items-center'>
                 <div>{!hasSelections ? <StatusIndicator type='danger' /> : <StatusIndicator type='success' />}</div>
                 <div>
                   {hasSelections ? (
@@ -888,7 +912,7 @@ const Content: React.FC<ContentProps> = ({
               placement='top'
               text='Enhance graph quality'
               label='Graph Enhancemnet Settings'
-              className='mr-2.5'
+              className='mr-2!'
               onClick={toggleEnhancementDialog}
               disabled={!connectionStatus || isReadOnlyUser}
               size={isTablet ? 'small' : 'medium'}
@@ -898,7 +922,7 @@ const Content: React.FC<ContentProps> = ({
             {!connectionStatus ? (
               <Button
                 size={isTablet ? 'small' : 'medium'}
-                className='mr-2.5'
+                className='mr-2!'
                 onClick={() => setOpenConnection((prev) => ({ ...prev, openPopUp: true }))}
               >
                 {buttonCaptions.connectToNeo4j}
@@ -940,11 +964,7 @@ const Content: React.FC<ContentProps> = ({
           handleGenerateGraph={processWaitingFilesOnRefresh}
         ></FileTable>
 
-        <Flex
-          className={`p-2.5  mt-1.5 absolute bottom-0 w-full`}
-          justifyContent='space-between'
-          flexDirection={isTablet ? 'column' : 'row'}
-        >
+        <Flex className={`p-2.5  mt-1.5 absolute bottom-0 w-full`} justifyContent='space-between' flexDirection={'row'}>
           <div>
             <DropdownComponent
               onSelect={handleDropdownChange}
@@ -969,28 +989,6 @@ const Content: React.FC<ContentProps> = ({
               {selectedfileslength && !disableCheck && newFilecheck ? `(${newFilecheck})` : ''}
             </ButtonWithToolTip>
             <ButtonWithToolTip
-              text={tooltips.showGraph}
-              placement='top'
-              onClick={handleGraphView}
-              disabled={showGraphCheck}
-              className='mr-0.5'
-              label='show graph'
-              size={isTablet ? 'small' : 'medium'}
-            >
-              {buttonCaptions.showPreviewGraph} {selectedfileslength && completedfileNo ? `(${completedfileNo})` : ''}
-            </ButtonWithToolTip>
-            <ButtonWithToolTip
-              text={tooltips.bloomGraph}
-              placement='top'
-              onClick={handleOpenGraphClick}
-              disabled={!filesData.some((f) => f?.status === 'Completed')}
-              className='ml-0.5'
-              label='Open Graph with Bloom'
-              size={isTablet ? 'small' : 'medium'}
-            >
-              {buttonCaptions.exploreGraphWithBloom}
-            </ButtonWithToolTip>
-            <ButtonWithToolTip
               text={
                 !selectedfileslength ? tooltips.deleteFile : `${selectedfileslength} ${tooltips.deleteSelectedFiles}`
               }
@@ -1004,6 +1002,55 @@ const Content: React.FC<ContentProps> = ({
               {buttonCaptions.deleteFiles}
               {selectedfileslength != undefined && selectedfileslength > 0 && `(${selectedfileslength})`}
             </ButtonWithToolTip>
+            <Flex flexDirection='row' gap='0'>
+              <Button
+                onClick={handleGraphView}
+                isDisabled={showGraphCheck}
+                className='px-0! flex! items-center justify-between gap-4 graphbtn'
+                size={isTablet ? 'small' : 'medium'}
+              >
+                <span className='mx-2'>
+                  {buttonCaptions.showPreviewGraph}{' '}
+                  {selectedfileslength && completedfileNo ? `(${completedfileNo})` : ''}
+                </span>
+              </Button>
+              <div
+                className={`ndl-icon-btn ndl-clean dropdownbtn ${colorMode === 'dark' ? 'darktheme' : ''} ${
+                  isTablet ? 'small' : 'medium'
+                }`}
+                onClick={(e) => {
+                  setIsGraphBtnMenuOpen((old) => !old);
+                  e.stopPropagation();
+                }}
+                ref={graphbtnRef}
+              >
+                {!isGraphBtnMenuOpen ? (
+                  <ChevronUpIconOutline className='n-size-token-5' />
+                ) : (
+                  <ChevronDownIconOutline className='n-size-token-' />
+                )}
+              </div>
+            </Flex>
+
+            <Menu
+              placement='top-end-bottom-end'
+              isOpen={isGraphBtnMenuOpen}
+              anchorRef={graphbtnRef}
+              onClose={() => setIsGraphBtnMenuOpen(false)}
+            >
+              <Menu.Items
+                htmlAttributes={{
+                  id: 'default-menu',
+                }}
+              >
+                <Menu.Item title='Graph Schema' onClick={handleSchemaView} isDisabled={!connectionStatus} />
+                <Menu.Item
+                  title='Explore Graph in Neo4j'
+                  onClick={handleOpenGraphClick}
+                  isDisabled={!filesData.some((f) => f?.status === 'Completed')}
+                />
+              </Menu.Items>
+            </Menu>
           </Flex>
         </Flex>
       </div>

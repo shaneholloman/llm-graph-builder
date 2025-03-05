@@ -58,6 +58,7 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
   const [disableRefresh, setDisableRefresh] = useState<boolean>(false);
   const [selected, setSelected] = useState<{ type: EntityType; id: string } | undefined>(undefined);
   const [mode, setMode] = useState<boolean>(false);
+  const graphQueryAbortControllerRef = useRef<AbortController>();
 
   const graphQuery: string =
     graphType.includes('DocumentChunk') && graphType.includes('Entities')
@@ -109,17 +110,23 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
   }, [allNodes]);
 
   const fetchData = useCallback(async () => {
+    graphQueryAbortControllerRef.current = new AbortController();
     try {
       let nodeRelationshipData;
       if (viewPoint === graphLabels.showGraphView) {
         nodeRelationshipData = await graphQueryAPI(
           graphQuery,
-          selectedRows?.map((f) => f.name)
+          selectedRows?.map((f) => f.name),
+          graphQueryAbortControllerRef.current.signal
         );
       } else if (viewPoint === graphLabels.showSchemaView) {
         nodeRelationshipData = await getGraphSchema();
       } else {
-        nodeRelationshipData = await graphQueryAPI(graphQuery, [inspectedName ?? '']);
+        nodeRelationshipData = await graphQueryAPI(
+          graphQuery,
+          [inspectedName ?? ''],
+          graphQueryAbortControllerRef.current.signal
+        );
       }
       return nodeRelationshipData;
     } catch (error: any) {
@@ -310,6 +317,7 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
 
   // when modal closes reset all states to default
   const onClose = () => {
+    graphQueryAbortControllerRef?.current?.abort();
     setStatus('unknown');
     setStatusMessage('');
     setGraphViewOpen(false);
@@ -355,15 +363,14 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
       >
         <Dialog.Header htmlAttributes={{ id: 'graph-title' }}>
           {headerTitle}
-          {viewPoint !== graphLabels.chatInfoView ||
-            (viewPoint === graphLabels.showSchemaView && (
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span>
-                  <InformationCircleIconOutline className='n-size-token-6' />
-                </span>
-                <span className='n-body-small ml-1'>{graphLabels.chunksInfo}</span>
-              </div>
-            ))}
+          {viewPoint !== graphLabels.chatInfoView && (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span>
+                <InformationCircleIconOutline className='n-size-token-6' />
+              </span>
+              <span className='n-body-small ml-1'>{graphLabels.chunksInfo}</span>
+            </div>
+          )}
           <Flex className='w-full' alignItems='center' flexDirection='row'>
             {checkBoxView && (
               <CheckboxSelection
@@ -378,19 +385,19 @@ const GraphViewModal: React.FunctionComponent<GraphViewModalProps> = ({
         <Dialog.Content className='flex flex-col n-gap-token-4 w-full grow overflow-auto border border-palette-neutral-border-weak'>
           <div className='bg-white relative w-full h-full max-h-full'>
             {loading ? (
-              <div className='my-40 flex items-center justify-center'>
+              <div className='my-40 flex! items-center justify-center'>
                 <LoadingSpinner size='large' />
               </div>
             ) : status !== 'unknown' ? (
-              <div className='my-40 flex items-center justify-center'>
+              <div className='my-40 flex! items-center justify-center'>
                 <Banner name='graph banner' description={statusMessage} type={status} usage='inline' />
               </div>
             ) : nodes.length === 0 && relationships.length === 0 && graphType.length !== 0 ? (
-              <div className='my-40 flex items-center justify-center'>
+              <div className='my-40 flex! items-center justify-center'>
                 <Banner name='graph banner' description={graphLabels.noNodesRels} type='danger' usage='inline' />
               </div>
             ) : graphType.length === 0 && checkBoxView ? (
-              <div className='my-40 flex items-center justify-center'>
+              <div className='my-40 flex! items-center justify-center'>
                 <Banner name='graph banner' description={graphLabels.selectCheckbox} type='danger' usage='inline' />
               </div>
             ) : (

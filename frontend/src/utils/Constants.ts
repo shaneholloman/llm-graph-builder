@@ -14,6 +14,7 @@ export const llms =
     ? (process.env.VITE_LLM_MODELS?.split(',') as string[])
     : [
         'openai_gpt_3.5',
+        'openai-gpt-o3-mini',
         'openai_gpt_4o',
         'openai_gpt_4o_mini',
         'gemini_1.5_pro',
@@ -42,12 +43,14 @@ export const supportedLLmsForRagas = [
   'openai_gpt_4o_mini',
   'gemini_1.5_pro',
   'gemini_1.5_flash',
+  'gemini_2.0_flash',
   'azure_ai_gpt_35',
   'azure_ai_gpt_4o',
   'groq_llama3_70b',
   'anthropic_claude_3_5_sonnet',
   'fireworks_llama_v3_70b',
   'bedrock_claude_3_5_sonnet',
+  'openai-gpt-o3-mini',
 ];
 export const supportedLLmsForGroundTruthMetrics = [
   'openai_gpt_3.5',
@@ -60,6 +63,7 @@ export const supportedLLmsForGroundTruthMetrics = [
   'anthropic_claude_3_5_sonnet',
   'fireworks_llama_v3_70b',
   'bedrock_claude_3_5_sonnet',
+  'openai-gpt-o3-mini',
 ];
 export const prodllms =
   process.env.VITE_LLM_MODELS_PROD?.trim() != ''
@@ -127,6 +131,12 @@ export const chatModes =
       ];
 
 export const chunkSize = process.env.VITE_CHUNK_SIZE ? parseInt(process.env.VITE_CHUNK_SIZE) : 1 * 1024 * 1024;
+export const tokenchunkSize = process.env.VITE_TOKENS_PER_CHUNK ? parseInt(process.env.VITE_TOKENS_PER_CHUNK) : 100;
+export const chunkOverlap = process.env.VITE_CHUNK_OVERLAP ? parseInt(process.env.VITE_CHUNK_OVERLAP) : 20;
+export const chunksToCombine = process.env.VITE_CHUNK_TO_COMBINE ? parseInt(process.env.VITE_CHUNK_TO_COMBINE) : 1;
+export const defaultTokenChunkSizeOptions = [50, 100, 200, 400, 1000];
+export const defaultChunkOverlapOptions = [10, 20, 30, 40, 50];
+export const defaultChunksToCombineOptions = [1, 2, 3, 4, 5, 6];
 export const timeperpage = process.env.VITE_TIME_PER_PAGE ? parseInt(process.env.VITE_TIME_PER_PAGE) : 50;
 export const timePerByte = 0.2;
 export const largeFileSize = process.env.VITE_LARGE_FILE_SIZE
@@ -160,6 +170,7 @@ export const tooltips = {
   openChatPopout: 'Chat',
   downloadChat: 'Download Conversation',
   visualizeGraph: 'Visualize Graph Schema',
+  additionalInstructions: 'Analyze instructions for schema',
 };
 export const PRODMODLES = ['openai_gpt_4o', 'openai_gpt_4o_mini', 'diffbot', 'gemini_1.5_flash'];
 export const buttonCaptions = {
@@ -340,6 +351,7 @@ export const getDefaultMessage = () => {
 export const appLabels = {
   ownSchema: 'Or Define your own Schema',
   predefinedSchema: 'Select a Pre-defined Schema',
+  chunkingConfiguration: 'Select a Chunking Configuration',
 };
 
 export const LLMDropdownLabel = {

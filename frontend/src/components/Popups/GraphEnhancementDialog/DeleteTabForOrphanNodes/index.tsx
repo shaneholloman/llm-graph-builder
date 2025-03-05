@@ -44,11 +44,11 @@ export default function DeletePopUpForOrphanNodes({
   const [openGraphView, setOpenGraphView] = useState(false);
   const [viewPoint, setViewPoint] = useState('');
   const { colorMode } = useContext(ThemeWrapperContext);
-
+  const ref = useRef<AbortController>();
   const fetchOrphanNodes = useCallback(async () => {
     try {
       setLoading(true);
-      const apiresponse = await getOrphanNodes();
+      const apiresponse = await getOrphanNodes(ref.current?.signal as AbortSignal);
       setLoading(false);
       if (apiresponse.data.data.length) {
         setOrphanNodes(apiresponse.data.data);
@@ -65,6 +65,7 @@ export default function DeletePopUpForOrphanNodes({
   }, []);
 
   useEffect(() => {
+    ref.current = new AbortController();
     if (userCredentials != null) {
       (async () => {
         await fetchOrphanNodes();
@@ -73,6 +74,7 @@ export default function DeletePopUpForOrphanNodes({
     return () => {
       setOrphanNodes([]);
       setTotalOrphanNodes(0);
+      ref?.current?.abort();
     };
   }, [userCredentials]);
   const columnHelper = createColumnHelper<orphanNodeProps>();
@@ -114,7 +116,7 @@ export default function DeletePopUpForOrphanNodes({
           return (
             <div className='textellipsis'>
               <TextLink
-                className='!cursor-pointer !inline'
+                className='cursor-pointer! inline!'
                 htmlAttributes={{
                   onClick: () => handleOrphanNodeClick(info.row.id, 'chatInfoView'),
                   title: info.getValue() ? info.getValue() : info.row.id,
@@ -257,7 +259,7 @@ export default function DeletePopUpForOrphanNodes({
             headerStyle: 'clean',
           }}
           rootProps={{
-            className: 'max-h-[355px] !overflow-y-auto',
+            className: 'max-h-[355px] overflow-y-auto!',
           }}
           isLoading={isLoading}
           components={{
@@ -291,7 +293,6 @@ export default function DeletePopUpForOrphanNodes({
         <Flex className='mt-3' flexDirection='row' justifyContent='flex-end'>
           <ButtonWithToolTip
             onClick={() => setShowDeletePopUp(true)}
-            size='large'
             loading={loading}
             text={
               isLoading

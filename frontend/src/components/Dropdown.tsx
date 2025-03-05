@@ -3,6 +3,7 @@ import { OptionType, ReusableDropdownProps } from '../types';
 import { memo, useMemo } from 'react';
 import { capitalize, capitalizeWithUnderscore } from '../utils/Utils';
 import { prodllms } from '../utils/Constants';
+
 const DropdownComponent: React.FC<ReusableDropdownProps> = ({
   options,
   placeholder,
@@ -28,8 +29,12 @@ const DropdownComponent: React.FC<ReusableDropdownProps> = ({
       <div className={view === 'ContentView' ? 'w-[150px]' : ''}>
         <Select
           type='select'
-          label='LLM Models'
-          helpText={<div className='!w-max'> LLM Model used for Extraction & Chat</div>}
+          aria-label='llm-dropdown'
+          label={
+            <div className='w-max! flex! gap-1 items-center'>
+              <span>LLM Model for Processing & Chat</span>
+            </div>
+          }
           selectProps={{
             onChange: handleChange,
             // @ts-ignore
@@ -41,12 +46,12 @@ const DropdownComponent: React.FC<ReusableDropdownProps> = ({
                 label: !isModelSupported ? (
                   <Tooltip type='simple' placement={isLargeDesktop ? 'left' : 'right'}>
                     <Tooltip.Trigger>
-                      <span>{label}</span>
+                      <span className='text-nowrap'>{label}</span>
                     </Tooltip.Trigger>
                     <Tooltip.Content>Available In Development Version</Tooltip.Content>
                   </Tooltip>
                 ) : (
-                  <span>{label}</span>
+                  <span className='text-nowrap'>{label}</span>
                 ),
                 value,
                 isDisabled: !isModelSupported,

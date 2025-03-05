@@ -48,11 +48,12 @@ export default function DeduplicationTab() {
   const [viewPoint, setViewPoint] = useState('');
   const [nodesCount, setNodesCount] = useState<number>(0);
   const { colorMode } = useContext(ThemeWrapperContext);
+  const abortRef = useRef<AbortController>();
 
   const fetchDuplicateNodes = useCallback(async () => {
     try {
       setLoading(true);
-      const duplicateNodesData = await getDuplicateNodes();
+      const duplicateNodesData = await getDuplicateNodes(abortRef?.current?.signal as AbortSignal);
       setLoading(false);
       if (duplicateNodesData.data.status === 'Failed') {
         throw new Error(duplicateNodesData.data.error);
@@ -71,11 +72,15 @@ export default function DeduplicationTab() {
   }, [userCredentials]);
 
   useEffect(() => {
+    abortRef.current = new AbortController();
     if (userCredentials != null) {
       (async () => {
         await fetchDuplicateNodes();
       })();
     }
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [userCredentials]);
 
   const clickHandler = async () => {
@@ -151,7 +156,7 @@ export default function DeduplicationTab() {
           return (
             <div className='textellipsis'>
               <TextLink
-                className='!cursor-pointer'
+                className='cursor-pointer!'
                 htmlAttributes={{
                   onClick: () => handleDuplicateNodeClick(info.row.id, 'chatInfoView'),
                   title: info.getValue(),
@@ -266,19 +271,15 @@ export default function DeduplicationTab() {
       <div>
         <Flex justifyContent='space-between' flexDirection='row'>
           <Flex>
-            <Typography variant={isTablet ? 'subheading-medium' : 'subheading-large'}>
+            <Typography variant={'subheading-medium'}>
               Refine Your Knowledge Graph: Merge Duplicate Entities:
             </Typography>
-            <Typography variant={isTablet ? 'body-small' : 'subheading-large'}>
+            <Typography variant={'body-small'}>
               Identify and merge similar entries like "Apple" and "Apple Inc." to eliminate redundancy and improve the
               accuracy and clarity of your knowledge graph.
             </Typography>
           </Flex>
-          {nodesCount > 0 && (
-            <Typography variant={isTablet ? 'subheading-medium' : 'subheading-large'}>
-              Total Duplicate Nodes: {nodesCount}
-            </Typography>
-          )}
+          {nodesCount > 0 && <Typography variant={'subheading-medium'}>Total Duplicate Nodes: {nodesCount}</Typography>}
         </Flex>
         <DataGrid
           ref={tableRef}
@@ -290,7 +291,7 @@ export default function DeduplicationTab() {
             headerStyle: 'clean',
           }}
           rootProps={{
-            className: 'max-h-[355px] !overflow-y-auto',
+            className: 'max-h-[355px] overflow-y-auto!',
           }}
           isLoading={isLoading}
           components={{
@@ -327,7 +328,6 @@ export default function DeduplicationTab() {
               await clickHandler();
               await fetchDuplicateNodes();
             }}
-            size='large'
             loading={mergeAPIloading}
             text={
               isLoading

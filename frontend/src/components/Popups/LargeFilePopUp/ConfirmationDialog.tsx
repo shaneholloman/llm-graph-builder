@@ -92,7 +92,7 @@ function ConfirmationDialog({
           <ExpiredFilesAlert checked={checked} handleToggle={handleToggle} Files={largeFiles} />
         )}
       </Dialog.Content>
-      <Dialog.Actions className='!mt-3'>
+      <Dialog.Actions className='mt-3!'>
         <Button
           onClick={() => {
             if (selectedRows.length) {
@@ -111,7 +111,6 @@ function ConfirmationDialog({
             setChecked([]);
             onClose();
           }}
-          size='large'
           isDisabled={largeFiles.some(
             (f) => f.createdAt != undefined && checked.includes(f.id) && isExpired(f?.createdAt as Date)
           )}

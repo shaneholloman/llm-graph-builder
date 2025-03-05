@@ -14,6 +14,7 @@ from langchain_community.chat_models import ChatOllama
 import boto3
 import google.auth
 from src.shared.constants import ADDITIONAL_INSTRUCTIONS
+import re
 
 def get_llm(model: str):
     """Retrieve the specified language model based on the model name."""
@@ -47,11 +48,16 @@ def get_llm(model: str):
             )
         elif "openai" in model:
             model_name, api_key = env_value.split(",")
-            llm = ChatOpenAI(
+            if "o3-mini" in model:
+                llm= ChatOpenAI(
+                api_key=api_key,
+                model=model_name)
+            else:
+                llm = ChatOpenAI(
                 api_key=api_key,
                 model=model_name,
                 temperature=0,
-            )
+                )
 
         elif "azure" in model:
             model_name, api_endpoint, api_key, api_version = env_value.split(",")
@@ -121,9 +127,7 @@ def get_llm(model: str):
     return llm, model_name
 
 
-def get_combined_chunks(chunkId_chunkDoc_list):
-    chunks_to_combine = int(os.environ.get("NUMBER_OF_CHUNKS_TO_COMBINE"))
-    logging.info(f"Combining {chunks_to_combine} chunks before sending request to LLM")
+def get_combined_chunks(chunkId_chunkDoc_list, chunks_to_combine):
     combined_chunk_document_list = []
     combined_chunks_page_content = [
         "".join(
@@ -163,7 +167,8 @@ def get_chunk_id_as_doc_metadata(chunkId_chunkDoc_list):
 async def get_graph_document_list(
     llm, combined_chunk_document_list, allowedNodes, allowedRelationship, additional_instructions=None
 ):
-    futures = []
+    if additional_instructions:
+        additional_instructions = sanitize_additional_instruction(additional_instructions)
     graph_document_list = []
     if "diffbot_api_key" in dir(llm):
         llm_transformer = llm
@@ -190,26 +195,43 @@ async def get_graph_document_list(
         graph_document_list = await llm_transformer.aconvert_to_graph_documents(combined_chunk_document_list)
     return graph_document_list
 
-
-async def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship, additional_instructions=None):
-    try:
-        llm, model_name = get_llm(model)
-        combined_chunk_document_list = get_combined_chunks(chunkId_chunkDoc_list)
+async def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship, chunks_to_combine, additional_instructions=None):
+    
+    llm, model_name = get_llm(model)
+    combined_chunk_document_list = get_combined_chunks(chunkId_chunkDoc_list, chunks_to_combine)
+    
+    if  allowedNodes is None or allowedNodes=="":
+        allowedNodes =[]
+    else:
+        allowedNodes = allowedNodes.split(',')    
+    if  allowedRelationship is None or allowedRelationship=="":   
+        allowedRelationship=[]
+    else:
+        allowedRelationship = allowedRelationship.split(',')
         
-        if  allowedNodes is None or allowedNodes=="":
-            allowedNodes =[]
-        else:
-            allowedNodes = allowedNodes.split(',')    
-        if  allowedRelationship is None or allowedRelationship=="":   
-            allowedRelationship=[]
-        else:
-            allowedRelationship = allowedRelationship.split(',')
-            
-        graph_document_list = await get_graph_document_list(
-            llm, combined_chunk_document_list, allowedNodes, allowedRelationship, additional_instructions
-        )
-        return graph_document_list
-    except Exception as e:
-        err = f"Error during extracting graph with llm: {e}"
-        logging.error(err)
-        raise 
+    graph_document_list = await get_graph_document_list(
+        llm, combined_chunk_document_list, allowedNodes, allowedRelationship, additional_instructions
+    )
+    return graph_document_list
+
+def sanitize_additional_instruction(instruction: str) -> str:
+   """
+   Sanitizes additional instruction by:
+   - Replacing curly braces `{}` with `[]` to prevent variable interpretation.
+   - Removing potential injection patterns like `os.getenv()`, `eval()`, `exec()`.
+   - Stripping problematic special characters.
+   - Normalizing whitespace.
+   Args:
+       instruction (str): Raw additional instruction input.
+   Returns:
+       str: Sanitized instruction safe for LLM processing.
+   """
+   logging.info("Sanitizing additional instructions")
+   instruction = instruction.replace("{", "[").replace("}", "]")  # Convert `{}` to `[]` for safety
+   # Step 2: Block dangerous function calls
+   injection_patterns = [r"os\.getenv\(", r"eval\(", r"exec\(", r"subprocess\.", r"import os", r"import subprocess"]
+   for pattern in injection_patterns:
+       instruction = re.sub(pattern, "[BLOCKED]", instruction, flags=re.IGNORECASE)
+   # Step 4: Normalize spaces
+   instruction = re.sub(r'\s+', ' ', instruction).strip()
+   return instruction
