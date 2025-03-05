@@ -26,23 +26,10 @@ export const createDefaultFormData = (userCredentials: UserCredentials) => {
   }
   api.interceptors.request.use(
     (config) => {
-      if (config.data instanceof FormData) {
-        for (const [key, value] of formData.entries()) {
-          if (!config.data.has(key)) {
-            config.data.append(key, value);
-          }
-        }
-      } else {
-        const formData = new FormData();
-        for (const [key, value] of formData.entries()) {
-          formData.append(key, value);
-        }
-        for (const [key, value] of Object.entries(config.data || {})) {
-          formData.append(key, value as any);
-        }
-        config.data = formData;
-      }
-
+      config.data = {
+        ...userCredentials,
+        ...config.data,
+      };
       return config;
     },
     (error) => {

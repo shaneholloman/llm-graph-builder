@@ -54,7 +54,22 @@ class Schema(BaseModel):
 
 class Schema_Email(Schema):
     email:str=""  
-    
+class ScanPayload(BaseModel):
+    uri: Optional[str] = None
+    userName: Optional[str] = None
+    password: Optional[str] = None
+    source_url: Optional[str] = None
+    database: Optional[str] = None
+    aws_access_key_id: Optional[str] = None
+    aws_secret_access_key: Optional[str] = None
+    wiki_query: Optional[str] = None
+    model: Optional[str] = None
+    gcs_bucket_name: Optional[str] = None
+    gcs_bucket_folder: Optional[str] = None
+    source_type: Optional[str] = None
+    gcs_project_id: Optional[str] = None
+    access_token: Optional[str] = None
+    email: Optional[str] = None
 class Fetch_Chunktext(Schema):
     document_name: str = "",
     page_no: int = Field(default=1)
@@ -66,7 +81,7 @@ class Retry_processing(Schema):
     email: str = ""
     
 class Drop_create_vector_index(Schema):
-    isVectorIndexExist: bool = false,
+    isVectorIndexExist: bool = False,
     email: str = ""
     
 class Merge_duplicate_nodes(Schema):
@@ -181,73 +196,59 @@ app.add_api_route("/health", health([healthy_condition, healthy]))
 
 @app.post("/url/scan")
 async def create_source_knowledge_graph_url(
-    uri=Form(None),
-    userName=Form(None),
-    password=Form(None),
-    source_url=Form(None),
-    database=Form(None),
-    aws_access_key_id=Form(None),
-    aws_secret_access_key=Form(None),
-    wiki_query=Form(None),
-    model=Form(),
-    gcs_bucket_name=Form(None),
-    gcs_bucket_folder=Form(None),
-    source_type=Form(None),
-    gcs_project_id=Form(None),
-    access_token=Form(None),
-    email=Form(None)
+    requestpayload:ScanPayload
     ):
-    
+    get_schema = requestpayload.dict()
     try:
         start = time.time()
-        if source_url is not None:
-            source = source_url
+        if get_schema['source_url'] is not None:
+            source = get_schema['source_url']
         else:
-            source = wiki_query
+            source = get_schema['wiki_query']
             
-        graph = create_graph_database_connection(uri, userName, password, database)
-        if source_type == 's3 bucket' and aws_access_key_id and aws_secret_access_key:
-            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_url_s3,graph, model, source_url, aws_access_key_id, aws_secret_access_key, source_type
+        graph = create_graph_database_connection(get_schema['uri'], get_schema['userName'], get_schema['password'], get_schema['database'])
+        if get_schema['source_type'] == 's3 bucket' and get_schema['aws_access_key_id and get_schema']['aws_secret_access_key']:
+            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_url_s3,graph, get_schema['model'], get_schema['source_url'], get_schema['aws_access_key_id, get_schema']['aws_secret_access_key'], get_schema['source_type']
             )
-        elif source_type == 'gcs bucket':
-            lst_file_name,success_count,failed_count = create_source_node_graph_url_gcs(graph, model, gcs_project_id, gcs_bucket_name, gcs_bucket_folder, source_type,Credentials(access_token)
+        elif get_schema['source_type'] == 'gcs bucket':
+            lst_file_name,success_count,failed_count = create_source_node_graph_url_gcs(graph, get_schema['model, get_schema']['gcs_project_id'], get_schema['gcs_bucket_name'], get_schema['gcs_bucket_folder'], get_schema['source_type'],Credentials(get_schema['access_token'])
             )
-        elif source_type == 'web-url':
-            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_web_url,graph, model, source_url, source_type
+        elif get_schema['source_type'] == 'web-url':
+            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_web_url,graph, get_schema['model'], get_schema['source_url'], get_schema['source_type']
             )  
-        elif source_type == 'youtube':
-            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_url_youtube,graph, model, source_url, source_type
+        elif get_schema['source_type'] == 'youtube':
+            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_url_youtube,graph, get_schema['model'], get_schema['source_url'], get_schema['source_type']
             )
-        elif source_type == 'Wikipedia':
-            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_url_wikipedia,graph, model, wiki_query, source_type
+        elif get_schema['source_type'] == 'Wikipedia':
+            lst_file_name,success_count,failed_count = await asyncio.to_thread(create_source_node_graph_url_wikipedia,graph, get_schema['model'], get_schema['wiki_query'], get_schema['source_type']
             )
         else:
             return create_api_response('Failed',message='source_type is other than accepted source')
 
-        message = f"Source Node created successfully for source type: {source_type} and source: {source}"
+        message = f"Source Node created successfully for source type: {get_schema['source_type']} and source: {source}"
         end = time.time()
         elapsed_time = end - start
-        json_obj = {'api_name':'url_scan','db_url':uri,'url_scanned_file':lst_file_name, 'source_url':source_url, 'wiki_query':wiki_query, 'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}','userName':userName, 'database':database, 'aws_access_key_id':aws_access_key_id,
-                            'model':model, 'gcs_bucket_name':gcs_bucket_name, 'gcs_bucket_folder':gcs_bucket_folder, 'source_type':source_type,
-                            'gcs_project_id':gcs_project_id, 'logging_time': formatted_time(datetime.now(timezone.utc)),'email':email}
+        json_obj = {'api_name':'url_scan','db_url':get_schema['uri'],'url_scanned_file':lst_file_name, 'source_url':get_schema['source_url'], 'wiki_query':get_schema['wiki_query'], 'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}','userName':get_schema['userName'], 'database':get_schema['database'], 'aws_access_key_id':get_schema['aws_access_key_id'],
+                            'model':get_schema['model'], 'gcs_bucket_name':get_schema['gcs_bucket_name'], 'gcs_bucket_folder':get_schema['gcs_bucket_folder'], 'source_type':get_schema['source_type'],
+                            'gcs_project_id':get_schema['gcs_project_id'], 'logging_time': formatted_time(datetime.now(timezone.utc)),'email':get_schema['email']}
         logger.log_struct(json_obj, "INFO")
         result ={'elapsed_api_time' : f'{elapsed_time:.2f}'}
         return create_api_response("Success",message=message,success_count=success_count,failed_count=failed_count,file_name=lst_file_name,data=result)
     except LLMGraphBuilderException as e:
         error_message = str(e)
-        message = f" Unable to create source node for source type: {source_type} and source: {source}"
+        message = f" Unable to create source node for source type: {get_schema['source_type']} and source: {source}"
         # Set the status "Success" becuase we are treating these error already handled by application as like custom errors.
-        json_obj = {'error_message':error_message, 'status':'Success','db_url':uri, 'userName':userName, 'database':database,'success_count':1, 'source_type': source_type, 'source_url':source_url, 'wiki_query':wiki_query, 'logging_time': formatted_time(datetime.now(timezone.utc)),'email':email}
+        json_obj = {'error_message':error_message, 'status':'Success','db_url':get_schema['uri'], 'userName':get_schema['userName'], 'database':get_schema['database'],'success_count':1, 'source_type': get_schema['source_type'], 'source_url':get_schema['source_url'], 'wiki_query':get_schema['wiki_query'], 'logging_time': formatted_time(datetime.now(timezone.utc)),'email':get_schema['email']}
         logger.log_struct(json_obj, "INFO")
         logging.exception(f'File Failed in upload: {e}')
-        return create_api_response('Failed',message=message + error_message[:80],error=error_message,file_source=source_type)
+        return create_api_response('Failed',message=message + error_message[:80],error=error_message,file_source=get_schema['source_type'])
     except Exception as e:
         error_message = str(e)
-        message = f" Unable to create source node for source type: {source_type} and source: {source}"
-        json_obj = {'error_message':error_message, 'status':'Failed','db_url':uri, 'userName':userName, 'database':database,'failed_count':1, 'source_type': source_type, 'source_url':source_url, 'wiki_query':wiki_query, 'logging_time': formatted_time(datetime.now(timezone.utc)),'email':email}
+        message = f" Unable to create source node for source type: {get_schema['source_type']} and source: {source}"
+        json_obj = {'error_message':error_message, 'status':'Failed','db_url':get_schema['uri'], 'userName':get_schema['userName'], 'database':get_schema['database'],'failed_count':1, 'source_type': get_schema['source_type'], 'source_url':get_schema['source_url'], 'wiki_query':get_schema['wiki_query'], 'logging_time': formatted_time(datetime.now(timezone.utc)),'email':get_schema['email']}
         logger.log_struct(json_obj, "ERROR")
         logging.exception(f'Exception Stack trace upload:{e}')
-        return create_api_response('Failed',message=message + error_message[:80],error=error_message,file_source=source_type)
+        return create_api_response('Failed',message=message + error_message[:80],error=error_message,file_source=get_schema['source_type'])
     finally:
         gc.collect()
 
