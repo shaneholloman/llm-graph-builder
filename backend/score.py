@@ -70,6 +70,33 @@ class ScanPayload(BaseModel):
     gcs_project_id: Optional[str] = None
     access_token: Optional[str] = None
     email: Optional[str] = None
+    
+class ExtractPayload(BaseModel):
+    uri: Optional[str] = None
+    userName: Optional[str] = None
+    password: Optional[str] = None
+    model: str = "",
+    database: Optional[str] = None
+    source_url: Optional[str] = None
+    aws_access_key_id: Optional[str] = None
+    aws_secret_access_key: Optional[str] = None
+    wiki_query: Optional[str] = None
+    gcs_project_id: Optional[str] = None
+    gcs_bucket_name: Optional[str] = None
+    gcs_bucket_folder: Optional[str] = None
+    gcs_blob_filename: Optional[str] = None
+    source_type: Optional[str] = None
+    file_name: Optional[str] = None
+    allowedNodes: Optional[str] = None
+    allowedRelationship: Optional[str] = None
+    token_chunk_size: Optional[int] = None
+    chunk_overlap: Optional[int] = None,
+    chunks_to_combine: Optional[int] = None,
+    language: Optional[str] = None 
+    access_token: Optional[str] = None 
+    retry_condition: Optional[str] = None 
+    additional_instructions: Optional[str] = None 
+    email: Optional[str] = None 
 class Fetch_Chunktext(Schema):
     document_name: str = "",
     page_no: int = Field(default=1)
@@ -254,31 +281,7 @@ async def create_source_knowledge_graph_url(
 
 @app.post("/extract")
 async def extract_knowledge_graph_from_file(
-    uri=Form(None),
-    userName=Form(None),
-    password=Form(None),
-    model=Form(),
-    database=Form(None),
-    source_url=Form(None),
-    aws_access_key_id=Form(None),
-    aws_secret_access_key=Form(None),
-    wiki_query=Form(None),
-    gcs_project_id=Form(None),
-    gcs_bucket_name=Form(None),
-    gcs_bucket_folder=Form(None),
-    gcs_blob_filename=Form(None),
-    source_type=Form(None),
-    file_name=Form(None),
-    allowedNodes=Form(None),
-    allowedRelationship=Form(None),
-    token_chunk_size: Optional[int] = Form(None),
-    chunk_overlap: Optional[int] = Form(None),
-    chunks_to_combine: Optional[int] = Form(None),
-    language=Form(None),
-    access_token=Form(None),
-    retry_condition=Form(None),
-    additional_instructions=Form(None),
-    email=Form(None)
+    requestpayload:ExtractPayload
 ):
     """
     Calls 'extract_graph_from_file' in a new thread to create Neo4jGraph from a
@@ -294,6 +297,8 @@ async def extract_knowledge_graph_from_file(
     Returns:
           Nodes and Relations created in Neo4j databse for the pdf file
     """
+    extract = requestpayload.dict()
+    
     try:
         start_time = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)   
