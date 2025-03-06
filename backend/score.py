@@ -87,8 +87,8 @@ class ExtractPayload(BaseModel):
     gcs_blob_filename: Optional[str] = None
     source_type: Optional[str] = None
     file_name: Optional[str] = None
-    allowedNodes: Optional[str] = None
-    allowedRelationship: Optional[str] = None
+    allowedNodes: Optional[List[str]] = None
+    allowedRelationship: Optional[List[str]] = None
     token_chunk_size: Optional[int] = None
     chunk_overlap: Optional[int] = None,
     chunks_to_combine: Optional[int] = None,
