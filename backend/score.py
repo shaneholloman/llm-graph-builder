@@ -54,12 +54,19 @@ class Schema(BaseModel):
 
 class Schema_Email(Schema):
     email:str=""  
-class ScanPayload(BaseModel):
-    uri: Optional[str] = None
-    userName: Optional[str] = None
-    password: Optional[str] = None
+    
+class SchemaPayload(BaseModel):
+    uri:Optional[str] = None
+    userName:Optional[str] = None
+    password:Optional[str] = None
+    database:Optional[str] = None
+    email:Optional[str] = None
+    
+class PostProcessing(SchemaPayload):
+    tasks:Optional[str] = None
+    
+class ScanPayload(SchemaPayload):
     source_url: Optional[str] = None
-    database: Optional[str] = None
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
     wiki_query: Optional[str] = None
@@ -69,14 +76,10 @@ class ScanPayload(BaseModel):
     source_type: Optional[str] = None
     gcs_project_id: Optional[str] = None
     access_token: Optional[str] = None
-    email: Optional[str] = None
     
-class ExtractPayload(BaseModel):
-    uri: Optional[str] = None
-    userName: Optional[str] = None
-    password: Optional[str] = None
+    
+class ExtractPayload(SchemaPayload):
     model: str = "",
-    database: Optional[str] = None
     source_url: Optional[str] = None
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
@@ -87,8 +90,8 @@ class ExtractPayload(BaseModel):
     gcs_blob_filename: Optional[str] = None
     source_type: Optional[str] = None
     file_name: Optional[str] = None
-    allowedNodes: Optional[List[str]] = None
-    allowedRelationship: Optional[List[str]] = None
+    allowedNodes: Optional[str] = None
+    allowedRelationship: Optional[str] = None
     token_chunk_size: Optional[int] = None
     chunk_overlap: Optional[int] = None,
     chunks_to_combine: Optional[int] = None,
@@ -96,7 +99,39 @@ class ExtractPayload(BaseModel):
     access_token: Optional[str] = None 
     retry_condition: Optional[str] = None 
     additional_instructions: Optional[str] = None 
-    email: Optional[str] = None 
+
+
+class ChatBotPayload(SchemaPayload):
+    model: Optional[str]= None
+    question: Optional[str]= None
+    document_names: Optional[str]= None
+    session_id: Optional[str]= None
+    mode: Optional[str]= None
+      
+class ChunkEntities(SchemaPayload):
+    nodedetails: Optional[str]= None
+    entities: Optional[str]= None
+    mode: Optional[str]= None
+    
+class GraphQuery(SchemaPayload):
+    document_names: Optional[str]= None
+    
+class GetNeighbours(SchemaPayload):
+    elementId: Optional[str]= None 
+    
+class ClearBotPayload(SchemaPayload):
+    session_id: Optional[int] = None
+
+class CancelJob(SchemaPayload):
+    filenames: Optional[int] = None
+    source_types: Optional[int] = None
+    
+class PopulateGraphSchema(BaseModel):
+    input_text: Optional[str]= None 
+    model: Optional[str]= None 
+    is_schema_description_checked: Optional[str]= None 
+    email: Optional[str]= None 
+    
 class Fetch_Chunktext(Schema):
     document_name: str = "",
     page_no: int = Field(default=1)
@@ -222,9 +257,7 @@ app.add_api_route("/health", health([healthy_condition, healthy]))
 
 
 @app.post("/url/scan")
-async def create_source_knowledge_graph_url(
-    requestpayload:ScanPayload
-    ):
+async def create_source_knowledge_graph_url(requestpayload:ScanPayload):
     get_schema = requestpayload.dict()
     try:
         start = time.time()
@@ -280,9 +313,7 @@ async def create_source_knowledge_graph_url(
         gc.collect()
 
 @app.post("/extract")
-async def extract_knowledge_graph_from_file(
-    requestpayload:ExtractPayload
-):
+async def extract_knowledge_graph_from_file(requestpayload:ExtractPayload):
     """
     Calls 'extract_graph_from_file' in a new thread to create Neo4jGraph from a
     PDF file based on the model.
@@ -297,8 +328,32 @@ async def extract_knowledge_graph_from_file(
     Returns:
           Nodes and Relations created in Neo4j databse for the pdf file
     """
-    extract = requestpayload.dict()
-    
+    payload_extract = requestpayload.dict()
+    uri  = payload_extract['uri']
+    userName = payload_extract['userName']
+    password = payload_extract['password']
+    model = payload_extract['model']
+    database = payload_extract['database']
+    source_url = payload_extract['source_url']
+    aws_access_key_id = payload_extract['aws_access_key_id']
+    aws_secret_access_key = payload_extract['aws_secret_access_key']
+    wiki_query = payload_extract['wiki_query']
+    gcs_project_id = payload_extract['gcs_project_id']
+    gcs_bucket_name = payload_extract['gcs_bucket_name']
+    gcs_bucket_folder = payload_extract['gcs_bucket_folder']
+    gcs_blob_filename = payload_extract['gcs_blob_filename']
+    source_type = payload_extract['source_type']
+    file_name = payload_extract['file_name']
+    allowedNodes = payload_extract['allowedNodes']
+    allowedRelationship = payload_extract['allowedRelationship']
+    token_chunk_size = payload_extract['token_chunk_size']
+    chunk_overlap = payload_extract['chunk_overlap']
+    chunks_to_combine = payload_extract['chunks_to_combine']
+    language = payload_extract['language']
+    access_token = payload_extract['access_token']
+    retry_condition = payload_extract['retry_condition']
+    additional_instructions = payload_extract['additional_instructions']
+    email = payload_extract['email']
     try:
         start_time = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)   
@@ -396,15 +451,11 @@ async def extract_knowledge_graph_from_file(
         gc.collect()
             
 @app.post("/sources_list")
-async def get_source_list(
-    uri=Form(None),
-    userName=Form(None),
-    password=Form(None),
-    database=Form(None),
-    email=Form(None)):
+async def get_source_list(Schema:SchemaPayload):
     """
     Calls 'get_source_list_from_graph' which returns list of sources which already exist in databse
     """
+    get_schema = Schema.dict()
     try:
         start = time.time()
         # if password is not None and password != "null":
@@ -415,10 +466,10 @@ async def get_source_list(
         #     database = None
         # if " " in uri:
         #     uri = uri.replace(" ","+")
-        result = await asyncio.to_thread(get_source_list_from_graph,uri,userName,password,database)
+        result = await asyncio.to_thread(get_source_list_from_graph,get_schema['uri'],get_schema['userName'],get_schema['password'],get_schema['database'])
         end = time.time()
         elapsed_time = end - start
-        json_obj = {'api_name':'sources_list','db_url':uri, 'userName':userName, 'database':database, 'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}','email':email}
+        json_obj = {'api_name':'sources_list','db_url':get_schema['uri'], 'userName':get_schema['userName'], 'database':get_schema['database'], 'logging_time': formatted_time(datetime.now(timezone.utc)), 'elapsed_api_time':f'{elapsed_time:.2f}','email':get_schema['email']}
         logger.log_struct(json_obj, "INFO")
         return create_api_response("Success",data=result, message=f"Total elapsed API time {elapsed_time:.2f}")
     except Exception as e:
@@ -429,7 +480,13 @@ async def get_source_list(
         return create_api_response(job_status, message=message, error=error_message)
 
 @app.post("/post_processing")
-async def post_processing(uri=Form(None), userName=Form(None), password=Form(None), database=Form(None), tasks=Form(None), email=Form(None)):
+async def post_processing(post_process:PostProcessing):
+    post_process = post_process.dict()
+    uri =  post_process['uri']
+    userName = post_process['userName']
+    password =  post_process['password']
+    database =  post_process['database']
+    task =  post_process['task']
     try:
         graph = create_graph_database_connection(uri, userName, password, database)
         tasks = set(map(str.strip, json.loads(tasks)))
@@ -486,9 +543,20 @@ async def post_processing(uri=Form(None), userName=Form(None), password=Form(Non
         gc.collect()
                 
 @app.post("/chat_bot")
-async def chat_bot(uri=Form(None),model=Form(None),userName=Form(None), password=Form(None), database=Form(None),question=Form(None), document_names=Form(None),session_id=Form(None),mode=Form(None),email=Form(None)):
+async def chat_bot(chatbot:ChatBotPayload):
     logging.info(f"QA_RAG called at {datetime.now()}")
     qa_rag_start_time = time.time()
+    chat_bot = chatbot.dict()
+    uri  = chat_bot['uri']
+    userName = chat_bot['userName']
+    password  = chat_bot['password']
+    database  = chat_bot['database']
+    model = chat_bot['model']
+    question = chat_bot['question']
+    document_names = chat_bot['document_names']
+    session_id = chat_bot['session_id']
+    mode = chat_bot['mode']
+    email = chat_bot['email']
     try:
         if mode == "graph":
             graph = Neo4jGraph( url=uri,username=userName,password=password,database=database,sanitize = True, refresh_schema=True)
@@ -518,7 +586,16 @@ async def chat_bot(uri=Form(None),model=Form(None),userName=Form(None), password
         gc.collect()
 
 @app.post("/chunk_entities")
-async def chunk_entities(uri=Form(None),userName=Form(None), password=Form(None), database=Form(None), nodedetails=Form(None),entities=Form(),mode=Form(),email=Form(None)):
+async def chunk_entities(chunk_entities:ChunkEntities):
+    chunk_entities = chunk_entities.dict()
+    uri = chunk_entities['uri'] 
+    userName = chunk_entities['userName']
+    database = chunk_entities['database'] 
+    password = chunk_entities['password'] 
+    email = chunk_entities['email'] 
+    nodedetails = chunk_entities['nodedetails'] 
+    entities = chunk_entities['entities'] 
+    mode = chunk_entities['mode'] 
     try:
         start = time.time()
         result = await asyncio.to_thread(get_entities_from_chunkids,nodedetails=nodedetails,entities=entities,mode=mode,uri=uri, username=userName, password=password, database=database)
@@ -538,7 +615,14 @@ async def chunk_entities(uri=Form(None),userName=Form(None), password=Form(None)
         gc.collect()
 
 @app.post("/get_neighbours")
-async def get_neighbours(uri=Form(None),userName=Form(None), password=Form(None), database=Form(None), elementId=Form(None),email=Form(None)):
+async def get_neighbours(get_neighbours:GetNeighbours):
+    get_neighbours = get_neighbours.dict()
+    uri = get_neighbours['uri']
+    userName = get_neighbours['userName']
+    database = get_neighbours['database']
+    password = get_neighbours['password']
+    email = get_neighbours['email']
+    elementId = get_neighbours['elementId']
     try:
         start = time.time()
         result = await asyncio.to_thread(get_neighbour_nodes,uri=uri, username=userName, password=password,database=database, element_id=elementId)
@@ -557,14 +641,14 @@ async def get_neighbours(uri=Form(None),userName=Form(None), password=Form(None)
         gc.collect()
 
 @app.post("/graph_query")
-async def graph_query(
-    uri: str = Form(None),
-    database: str = Form(None),
-    userName: str = Form(None),
-    password: str = Form(None),
-    document_names: str = Form(None),
-    email=Form(None)
-):
+async def graph_query(graph_query:GraphQuery):
+    graph_query = graph_query.dict() 
+    uri = graph_query['uri'] 
+    userName = graph_query['userName'] 
+    database = graph_query['database'] 
+    password = graph_query['password'] 
+    email = graph_query['email']  
+    document_names = graph_query['document_names']
     try:
         start = time.time()
         result = await asyncio.to_thread(
@@ -591,7 +675,14 @@ async def graph_query(
     
 
 @app.post("/clear_chat_bot")
-async def clear_chat_bot(uri=Form(None),userName=Form(None), password=Form(None), database=Form(None), session_id=Form(None),email=Form(None)):
+async def clear_chat_bot(clear_bot:ClearBotPayload):
+    clear_bot = clear_bot
+    uri = clear_bot['uri'] 
+    userName = clear_bot['userName'] 
+    database = clear_bot['database'] 
+    password = clear_bot['password'] 
+    email = clear_bot['email']  
+    session_id = clear_bot['session']
     try:
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
@@ -824,7 +915,15 @@ async def get_document_status(file_name, url, userName, password, database):
         return create_api_response('Failed',message=message)
     
 @app.post("/cancelled_job")
-async def cancelled_job(uri=Form(None), userName=Form(None), password=Form(None), database=Form(None), filenames=Form(None), source_types=Form(None),email=Form(None)):
+async def cancelled_job(cancelled_job:CancelJob):
+    cancelled_job = cancelled_job.dict()
+    uri =  cancelled_job['uri']
+    password = cancelled_job['password']
+    userName =  cancelled_job['userName']
+    database = cancelled_job['database']
+    filenames =  cancelled_job['filenames']
+    source_types = cancelled_job['source_types']
+    email = cancelled_job['email']
     try:
         start = time.time()
         graph = create_graph_database_connection(uri, userName, password, database)
@@ -845,7 +944,12 @@ async def cancelled_job(uri=Form(None), userName=Form(None), password=Form(None)
         gc.collect()
 
 @app.post("/populate_graph_schema")
-async def populate_graph_schema(input_text=Form(None), model=Form(None), is_schema_description_checked=Form(None),email=Form(None)):
+async def populate_graph_schema(populate_graph_schema:PopulateGraphSchema):
+    graph_schema = populate_graph_schema.dict()
+    input_text = graph_schema['input_text']
+    model = graph_schema['model']
+    is_schema_description_checked = graph_schema['is_schema_description_checked']
+    email = graph_schema['email']
     try:
         start = time.time()
         result = populate_graph_schema_from_text(input_text, model, is_schema_description_checked)
