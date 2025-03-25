@@ -15,6 +15,7 @@ import boto3
 import google.auth
 from src.shared.constants import ADDITIONAL_INSTRUCTIONS
 import re
+from langchain_community.callbacks.manager import get_openai_callback
 
 def get_llm(model: str):
     """Retrieve the specified language model based on the model name."""
@@ -192,7 +193,12 @@ async def get_graph_document_list(
     if isinstance(llm,DiffbotGraphTransformer):
         graph_document_list = llm_transformer.convert_to_graph_documents(combined_chunk_document_list)
     else:
-        graph_document_list = await llm_transformer.aconvert_to_graph_documents(combined_chunk_document_list)
+        with get_openai_callback() as cb:
+            graph_document_list = await llm_transformer.aconvert_to_graph_documents(combined_chunk_document_list)
+            print(f"Prompt tokens: {cb.prompt_tokens}")
+            print(f"Completion tokens: {cb.completion_tokens}")
+            print(f"Total tokens: {cb.total_tokens}")
+            print(f"Total cost (USD): {cb.total_cost}")
     return graph_document_list
 
 async def get_graph_from_llm(model, chunkId_chunkDoc_list, allowedNodes, allowedRelationship, chunks_to_combine, additional_instructions=None):
