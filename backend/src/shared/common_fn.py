@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 import boto3
 from langchain_community.embeddings import BedrockEmbeddings
+from langchain_core.callbacks import BaseCallbackHandler
 
 def check_url_source(source_type, yt_url:str=None, wiki_query:str=None):
     language=''
@@ -201,5 +202,46 @@ def get_bedrock_embeddings():
        )
        return bedrock_embeddings
    except Exception as e:
-       print(f"An unexpected error occurred: {e}")
+       logging.error(f"An unexpected error occurred: {e}")
        raise
+
+class UniversalTokenUsageHandler(BaseCallbackHandler):
+   def __init__(self):
+       self.total_prompt_tokens = 0
+       self.total_completion_tokens = 0
+       self.total_cost = 0.0
+   def on_llm_end(self, response, **kwargs):
+       usage = getattr(response, 'llm_output', {}).get('token_usage', {})
+       self.total_prompt_tokens += usage.get('prompt_tokens', 0)
+       self.total_completion_tokens += usage.get('completion_tokens', 0)
+   def report(self):
+       return {
+           "prompt_tokens": self.total_prompt_tokens,
+           "completion_tokens": self.total_completion_tokens,
+           "total_tokens": self.total_prompt_tokens + self.total_completion_tokens,
+       }
+def track_token_usage(email: str, usage: int) -> int:
+   if os.getenv("TRACK_TOKEN_USAGE", "False").lower() != "true":
+       logging.info("Token usage tracking is disabled.")
+       return -1
+   uri = os.getenv("NEO4J_TOKEN_TRACK_URI")
+   user = os.getenv("NEO4J_TOKEN_TRACK_USER")
+   password = os.getenv("NEO4J_TOKEN_TRACK_PASSWORD")
+   database = os.getenv("NEO4J_TOKEN_TRACK_DATABASE", "neo4j")
+   if not all([uri, user, password]):
+       raise EnvironmentError("Neo4j credentials are not set properly.")
+   
+   graph = create_graph_database_connection(uri, user, password, database)
+   cypher_query = """
+   MERGE (u:User {email: $email})
+   ON CREATE SET u.tokenUsage = $usage
+   ON MATCH SET u.tokenUsage = coalesce(u.tokenUsage, 0) + $usage
+   RETURN u.tokenUsage AS latestUsage
+   """
+   email = email.strip().replace('"','')
+   params = {"email": email, "usage": usage}
+   result = graph.query(cypher_query, params)
+   if result and len(result) > 0 and "latestUsage" in result[0]:
+       return result[0]["latestUsage"]
+   else:
+       raise RuntimeError("Failed to fetch updated token usage.")
