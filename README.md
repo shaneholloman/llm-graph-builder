@@ -1,6 +1,8 @@
 
 # Knowledge Graph Builder
 
+> This code is in pretty bad state. Just keeping it around for some ideas.
+
 ![Python](https://img.shields.io/badge/Python-yellow)
 ![FastAPI](https://img.shields.io/badge/FastAPI-green)
 ![React](https://img.shields.io/badge/React-blue)
