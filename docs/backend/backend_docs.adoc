@@ -2,24 +2,23 @@
 
 == API Reference
 
-
 === Connect to Neo4j Graph Database
 -----
 POST /connect
 -----
 
-This API is used to authenticate and connect frontend to backend using NEO4j database credential. 
+This API is used to authenticate and connect frontend to backend using NEO4j database credential.
 Based on the response from this API, the frontend UI displays the connection status and the database type icon, such as GDS DB or Aura DB.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`= Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri` = Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ----
 {
@@ -42,7 +41,7 @@ Based on the response from this API, the frontend UI displays the connection sta
 POST /upload
 ----
 
-This API handles the uploading of large files by breaking them into smaller chunks. 
+This API handles the uploading of large files by breaking them into smaller chunks.
 This method ensures that large files can be uploaded efficiently without overloading the server.
 
 ***API Parameters***
@@ -52,13 +51,13 @@ This method ensures that large files can be uploaded efficiently without overloa
 * `totalChunks`=The total number of chunks the file is divided into (each chunk of 1Mb size),
 * `originalname`=The original name of the file,
 * `model`=The model associated with the file,
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -81,15 +80,15 @@ POST /schema
 
 This API gets the labels and relationships from existing Neo4j database data. Users can set the schema for graph generation (i.e., nodes and relationship labels) in the settings panel.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -124,16 +123,16 @@ POST /populate_graph_schema
 
 The API is used to populate a graph schema based on the provided input text, model, and schema description flag.
 
-**API Parameters :**
+**API Parameters:**
 
 * `input_text`=The input text used to populate the graph schema.
 * `model`=The model to be used for populating the graph schema.
 * `is_schema_description_checked`=A flag indicating whether the schema description should be considered.
-* `is_local_storage`= Generate the generalized graph schema based on input text if value is false
-* `email`= Logged in User Email
+* `is_local_storage` = Generate the generalized graph schema based on input text if value is false
+* `email` = Logged in User Email
 
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -149,33 +148,33 @@ The API is used to populate a graph schema based on the provided input text, mod
 ....
 
 
-=== Unstructured sources scan other than local 
+=== Unstructured sources scan other than local
 ----
-POST /url/scan 
+POST /url/scan
 ----
 
 This API creates Document source nodes for all supported sources, including S3 buckets, GCS buckets, Wikipedia, web pages, YouTube videos, and local files
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name
-* `model`= LLM model,
-* `source_url`= <s3 bucket url or youtube url> ,
-* `aws_access_key_id`= AWS access key,
-* `aws_secret_access_key`= AWS secret key,
-* `wiki_query`= Wikipedia query sources,
-* `gcs_project_id`= GCS project id,
-* `gcs_bucket_name`= GCS bucket name,
-* `gcs_bucket_folder`= GCS bucket folder,
-* `source_type`= s3 bucket/ gcs bucket/ youtube/Wikipedia as source type
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name
+* `model` = LLM model,
+* `source_url` = <s3 bucket url or youtube url>,
+* `aws_access_key_id` = AWS access key,
+* `aws_secret_access_key` = AWS secret key,
+* `wiki_query` = Wikipedia query sources,
+* `gcs_project_id` = GCS project id,
+* `gcs_bucket_name` = GCS bucket name,
+* `gcs_bucket_folder` = GCS bucket folder,
+* `source_type` = s3 bucket/ gcs bucket/ youtube/Wikipedia as source type
 * `gcs_project_id`=Form(None),
 * `access_token`=Form(None),
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -199,17 +198,17 @@ This API creates Document source nodes for all supported sources, including S3 b
 ....
 
 
-=== Extration of nodes and relations from content
+=== Extraction of nodes and relations from content
 ----
 POST /extract :
 ----
 
 This API is responsible for -
 
-** Reading the content of source provided in the form of langchain Document object from respective langchain loaders 
+** Reading the content of source provided in the form of langchain Document object from respective langchain loaders
 
-** Dividing the document into multiple chunks, and make below relations - 
-*** PART_OF - relation from Document node to all chunk nodes 
+** Dividing the document into multiple chunks, and make below relations -
+*** PART_OF - relation from Document node to all chunk nodes
 *** FIRST_CHUNK - relation from document node to first chunk node
 *** NEXT_CHUNK - relation from a chunk pointing to next chunk of the document.
 *** HAS_ENTITY - relation between chunk node and entities extracted from LLM.
@@ -221,18 +220,18 @@ This API is responsible for -
 ** Update K-Nearest Neighbors graph for similar chunks.
 
 
-**Implementation :**
+**Implementation:**
 
-** For multiple sources of content - 
+** For multiple sources of content
 
 *** Local file - User can upload pdf file from their device.
 
-*** s3 bucket - User passes the bucket url and all the pdf files inside folders and subfolders will be listed. 
+*** s3 bucket - User passes the bucket url and all the pdf files inside folders and subfolders will be listed.
 
 *** GCS bucket - User passes gcs project id, gcs bucket name and folder name, do google authentication to access all the pdf files under that folder and its subfolders and if folder name is not passed by user, all the pdf files under the bucket and its subfolders will be listed if user have read access of the bucket.
 
-*** Web Sources - 
-**** Wikipedia - Wikipedia 1st page content is rendered url passed by user. 
+*** Web Sources
+**** Wikipedia - Wikipedia 1st page content is rendered url passed by user.
 
 **** Youtube - Youtube video transcript is processed and if no transcript is available then respective error is thrown.
 
@@ -240,38 +239,38 @@ This API is responsible for -
 
 ** Langchain's LLMGraphTransformer library is used to get nodes and relations in the form of GraphDocument from LLMs. User and System prompts, LLM chain, graphDocument schema are defined in the library itself.
 
-** SentenceTransformer embeddingds are used by default, also embeddings are made configurable to use either OpenAIEmbeddings or VertexAIEmbeddings.
+** SentenceTransformer embeddings are used by default, also embeddings are made configurable to use either OpenAIEmbeddings or VertexAIEmbeddings.
 
-** Vector index is created in databse on embeddingds created for chunks.
+** Vector index is created in database on embeddings created for chunks.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name
-* `model`= LLM model,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name
+* `model` = LLM model,
 * `file_name` = File uploaded from device
-* `source_url`= <s3 bucket url or youtube url> ,
-* `aws_access_key_id`= AWS access key,
-* `aws_secret_access_key`= AWS secret key,
-* `wiki_query`= Wikipedia query sources,
+* `source_url` = <s3 bucket url or youtube url>,
+* `aws_access_key_id` = AWS access key,
+* `aws_secret_access_key` = AWS secret key,
+* `wiki_query` = Wikipedia query sources,
 * `gcs_project_id`=GCS project id,
-* `gcs_bucket_name`= GCS bucket name,
-* `gcs_bucket_folder`= GCS bucket folder,
+* `gcs_bucket_name` = GCS bucket name,
+* `gcs_bucket_folder` = GCS bucket folder,
 * `gcs_blob_filename` = GCS file name,
-* `source_type`= local file/ s3 bucket/ gcs bucket/ youtube/ Wikipedia as source,
+* `source_type` = local file/ s3 bucket/ gcs bucket/ youtube/ Wikipedia as source,
 * `allowedNodes=Node labels passed from settings panel,
 * `allowedRelationship`=Relationship labels passed from settings panel,
-* `token_chunk_size`= chunk split size,
-* `chunk_overlap`= numric value of chunk overlap,
-* `chunks_to_combine`= value of combine chunks to process for extraction,
+* `token_chunk_size` = chunk split size,
+* `chunk_overlap` = numric value of chunk overlap,
+* `chunks_to_combine` = value of combine chunks to process for extraction,
 * `language`=Language in which wikipedia content will be extracted,
-* `retry_condition`= re-process the file based on selection,
-* `additional_instructions`= additional instruction for LLM while extraction,
-* `email`= Logged in User Email
+* `retry_condition` = re-process the file based on selection,
+* `additional_instructions` = additional instruction for LLM while extraction,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -326,7 +325,7 @@ This API is responsible for -
 }
 ....
 
-     
+
 === Get list of sources
 ----
 POST /sources_list
@@ -334,15 +333,15 @@ POST /sources_list
 
 List all sources (Document nodes) present in Neo4j graph database.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -389,16 +388,16 @@ POST /post_processing :
 
 This API is called at the end of document processing to create k-nearest neighbor relationships between similar chunks of documents based on KNN_MIN_SCORE, which is 0.8 by default, compute community clusters, generate community summaries, and recreate a full-text index on all labels in the database so Neo4j Bloom can make use of it.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name
-* `tasks`= List of tasks to perform,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name
+* `tasks` = List of tasks to perform,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -439,28 +438,28 @@ POST /chat_bot
 
 The API responsible for a chatbot system designed to leverage multiple AI models and a Neo4j graph database, providing answers to user queries. It interacts with AI models from OpenAI and Google's Vertex AI etc and utilizes embedding models to enhance the retrieval of relevant information. It utilises different retrievers (Retrieval Detail) to extract relevant information to the user query and uses LLM to formulate the answer. If no relevant information found the chatbot gracefully conveys to user.
 
-**Components :** 
- 
+**Components:**
+
 ** Embedding Models - Includes OpenAI Embeddings, VertexAI Embeddings, and SentenceTransformer Embeddings(Default) to support vector-based query operations.
 ** AI Models - OpenAI GPT 3.5, GPT 4o, GPT 40 mini, gemini_1.5_flash can be configured for the chatbot backend to generate responses and process natural language.
 ** Graph Database (Neo4jGraph) - Manages interactions with the Neo4j database, retrieving, and storing conversation histories.
 ** Response Generation - Utilizes Vector Embeddings from the Neo4j database, chat history, and the knowledge base of the LLM used.
-** Chat Modes - Vector , Graph, Vector + Graph, Fulltext, Vector + Graph+Fulltext, Entity Search + Vector, Global search Vector 
+** Chat Modes - Vector, Graph, Vector + Graph, Fulltext, Vector + Graph+Fulltext, Entity Search + Vector, Global search Vector
 
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`= Neo4j uri
-* `userName`= Neo4j database username
-* `password`= Neo4j database password
-* `model`= LLM model
-* `question`= User query for the chatbot
-* `session_id`= Session ID used to maintain the history of chats during the user's connection 
-* `mode` = chat mode to use 
+* `uri` = Neo4j uri
+* `userName` = Neo4j database username
+* `password` = Neo4j database password
+* `model` = LLM model
+* `question` = User query for the chatbot
+* `session_id` = Session ID used to maintain the history of chats during the user's connection
+* `mode` = chat mode to use
 * `document_names` = the names of documents to be filtered works for vector mode and vector+Graph mode,
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -530,17 +529,17 @@ The API responsible for a chatbot system designed to leverage multiple AI models
 
 This API is used to  get the entities and relations associated with a particular chunk and chunk metadata.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
 * `nodedetails` = Node element id's to get information(chunks,entities,communities),
 * `entities` = entities received from the retriver for graph based modes,
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -656,19 +655,19 @@ This API is used to  get the entities and relations associated with a particular
 POST /graph_query
 ----
 
-This API is used to visualize graphs for a particular document or list of multiple documents; 
+This API is used to visualize graphs for a particular document or list of multiple documents;
 it will return documents, chunks, entities, relationships and communities to the front-end to be shown in a graph visualization.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
 * `document_names` = File name for which user wants to view graph,
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -775,27 +774,27 @@ it will return documents, chunks, entities, relationships and communities to the
         ]
     },
     "message": "Total elapsed API time 0.79"
-}    
+}
 ....
 
-=== Get neighbour nodes 
+=== Get neighbour nodes
 ----
 POST /get_neighbours
 ----
 
 This API is used to get the nearby nodes and relationships based on the element id of the node for graph visualization of details of specific nodes.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
 * `elementId` = Element id of the node to retrive its neighbours,
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -867,16 +866,16 @@ POST /clear_chat_bot
 
 This API is used to clear the chat history which is saved in Neo4j DB.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
 * `session_id` = User session id for QA chat,
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -891,31 +890,31 @@ This API is used to clear the chat history which is saved in Neo4j DB.
 
 === SSE event to update processing status
 ----
-GET /update_extract_status 
+GET /update_extract_status
 ----
 
 The API provides a continuous update on the extraction status of a specified file. It uses Server-Sent Events (SSE) to stream updates to the client.
 
-**API Parameters :**
+**API Parameters:**
 
 * `file_name`=The name of the file whose extraction status is being tracked,
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
-    "fileName": "testFile.pdf", 
-    "status": "Processing", 
-    "processingTime": 0, 
-    "nodeCount": 0, 
-    "relationshipCount": 0, 
-    "model": "OpenAI GPT 3.5", 
-    "total_chunks": 3, 
-    "fileSize": 92373, 
+    "fileName": "testFile.pdf",
+    "status": "Processing",
+    "processingTime": 0,
+    "nodeCount": 0,
+    "relationshipCount": 0,
+    "model": "OpenAI GPT 3.5",
+    "total_chunks": 3,
+    "fileSize": 92373,
     "processed_chunk": 0
 }
 ....
@@ -925,22 +924,22 @@ The API provides a continuous update on the extraction status of a specified fil
 POST /delete_document_and_entities
 ----
 
-**Overview :**
+**Overview:**
 
-Deleteion of nodes and relations for multiple files is done through this API. User can choose multiple documents to be deleted, also user have option to delete only 'Document' and 'Chunk' nodes and keep the entities extracted from that document. 
+Deleteion of nodes and relations for multiple files is done through this API. User can choose multiple documents to be deleted, also user have option to delete only 'Document' and 'Chunk' nodes and keep the entities extracted from that document.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `filenames`= List of files to be deleted,
-* `source_types`= Document sources(Wikipedia, youtube, etc.),
-* `deleteEntities`= Boolean value to check entities deletion is requested or not,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `filenames` = List of files to be deleted,
+* `source_types` = Document sources(Wikipedia, youtube, etc.),
+* `deleteEntities` = Boolean value to check entities deletion is requested or not,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {"status":"Success","message":"Deleted 1 documents with entities from database"}
@@ -953,17 +952,17 @@ Deleteion of nodes and relations for multiple files is done through this API. Us
 
 This API is responsible for cancelling an in process job.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `filenames`= Name of the file whose processing need to be stopped, 
-* `source_types`= Source of the file,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `filenames` = Name of the file whose processing need to be stopped,
+* `source_types` = Source of the file,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -977,18 +976,18 @@ This API is responsible for cancelling an in process job.
 POST /get_unconnected_nodes_list
 ----
 
-The API retrieves a list of nodes in the graph database that are not connected to any other entity nodes, 
+The API retrieves a list of nodes in the graph database that are not connected to any other entity nodes,
 and only to chunks that they were extracted from. So to say orphan nodes from an domain graph perspective.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1033,17 +1032,17 @@ POST /delete_unconnected_nodes
 
 The API is used to delete unconnected entities from the neo4j database with the input provided as selection from the user.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
 * `unconnected_entities_list`=selected entities list to delete of unconnected entities,
-* `email`= Logged in User Email
+* `email` = Logged in User Email
 
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1060,15 +1059,15 @@ POST /get_duplicate_nodes
 
 The API is used to fetch duplicate entities from database.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1118,16 +1117,16 @@ POST /merge_duplicate_nodes
 
 The API is used to merge duplicate entities from database selected by user.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `duplicate_nodes_list`= selected entities list to merge of with similar entities,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `duplicate_nodes_list` = selected entities list to merge of with similar entities,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1147,16 +1146,16 @@ POST /drop_create_vector_index
 
 The API is used to drop and create the vector index when vector index dimesion are different.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `isVectorIndexExist`= True or False based on whether vector index exist in database,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `isVectorIndexExist` = True or False based on whether vector index exist in database,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1169,26 +1168,26 @@ The API is used to drop and create the vector index when vector index dimesion a
 ----
 POST /retry_processing
 ----
- 
+
 This API is used to reprocess canceled, completed or failed file sources.
 Users have 3 options to reprocess files:
-* Start from beginning - In this condition file will be processed from the beginning i.e. 1st chunk again.
-* Delete entities and start from beginning - If the file source is already processed and has any existing nodes and relationships then those will be deleted and the file will be reprocessed from the 1st chunk.
-* Start from the last processed position - Canceled or failed files will be processed from the last successfully processed chunk position. This option is not available for completed files.
+* Start from beginning - In this condition file will be processed from the beginning i.e. 1st chunk again.
+* Delete entities and start from beginning - If the file source is already processed and has any existing nodes and relationships then those will be deleted and the file will be reprocessed from the 1st chunk.
+* Start from the last processed position - Canceled or failed files will be processed from the last successfully processed chunk position. This option is not available for completed files.
 * Once the status is set to 'Reprocess', users can again click on Generate Graph to process the file for knowledge graph creation.
- 
-**API Parameters :**
- 
-* `uri`=Neo4j uri,
-* `userName`= Neo4j db username,
-* `password`= Neo4j db password,
-* `database`= Neo4j database name,
-* `file_name`= Name of the file which user want to Ready to Reprocess.
-* `retry_condition` = One of the above 3 conditions which is selected for reprocessing.
-* `email`= Logged in User Email,
 
- 
-**Response :**
+**API Parameters:**
+
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `file_name` = Name of the file which user want to Ready to Reprocess.
+* `retry_condition` = One of the above 3 conditions which is selected for reprocessing.
+* `email` = Logged in User Email,
+
+
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1202,18 +1201,18 @@ Users have 3 options to reprocess files:
 POST /metric
 ----
 
-The API responsible for evaluating the chatbot response for the different retrievers on the basis of different metrics 
+The API responsible for evaluating the chatbot response for the different retrievers on the basis of different metrics
 such as faithfulness and answer relevancy. This utilises the RAGAS library to calculate these metrics.
 
-**API Parameters :**
+**API Parameters:**
 
-* `question`= User query for the chatbot
-* `context`= context retrieved by retrieval mode used for answer generation
-* `answer`= answer generated by chatbot
-* `model`= LLM model
-* `mode`= Retrieval mode used for answer generationRetrieval mode used for answer generation
+* `question` = User query for the chatbot
+* `context` = context retrieved by retrieval mode used for answer generation
+* `answer` = answer generated by chatbot
+* `model` = LLM model
+* `mode` = Retrieval mode used for answer generationRetrieval mode used for answer generation
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1235,16 +1234,16 @@ POST /additional_metrics
 
 The API responsible for a evaluating chatbot responses on the basis of different metrics such as context entity recall, semantic score, rouge score. This reuqire additional ground truth to be supplied by user. This utilises RAGAS library to calculate these metrics.
 
-**API Parameters :**
+**API Parameters:**
 
-* `question`= User query for the chatbot
-* `context`= context retrieved by retrieval mode used for answer generation
-* `answer`= answer generated by chatbot
-* `reference`= ground truth/ expected answer provided by user
-* `model`= LLM model
-* `mode`= Retrieval mode used for answer generationRetrieval mode used for answer generation
+* `question` = User query for the chatbot
+* `context` = context retrieved by retrieval mode used for answer generation
+* `answer` = answer generated by chatbot
+* `reference` = ground truth/ expected answer provided by user
+* `model` = LLM model
+* `mode` = Retrieval mode used for answer generationRetrieval mode used for answer generation
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1266,17 +1265,17 @@ POST /fetch_chunktext
 
 The API responsible for a fetching text associated with a particular chunk and chunk metadata.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name
 * `document_name` = Name of document for which chunks needs to be fetched.
-* `page no` = page number for multipage  
-* `email`= Logged in User Email
+* `page no` = page number for multipage
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1284,12 +1283,12 @@ The API responsible for a fetching text associated with a particular chunk and c
     "data": {
         "pageitems": [
             {
-                "text": "By T. Albert  Illustrated by: maaillustrations.com  Science has never been so much fun. Here is all that a child needs to know about water, rain, hail, sleet and water cycle. When Professor Mois Ture teaches- little readers read, learn and ask for more…..  Published by Monkey Pen Ltd  Dear Supporter,  Thank you for downloading our childrens books. Monkey Pens Vision is to provide thousands of free childrens books to young readers around the globe.  Please share our books with your friends and family to support our mission. Thank you  Please make a donation on Patreon to support Monkey Pens Free Book Project:  Hi, I am Professor Mois Ture and I will be telling you about water. You can call it RAIN. You can call it SNOW. You can call it SLEET. You can call it HAIL. But it’s WATER all the same. Did you ever wonder how",
+                "text": "By T. Albert  Illustrated by: maaillustrations.com  Science has never been so much fun. Here is all that a child needs to know about water, rain, hail, sleet and water cycle. When Professor Mois Ture teaches- little readers read, learn and ask for more…..  Published by Monkey Pen Ltd  Dear Supporter,  Thank you for downloading our childrens books. Monkey Pens Vision is to provide thousands of free childrens books to young readers around the globe.  Please share our books with your friends and family to support our mission. Thank you  Please make a donation on Patreon to support Monkey Pens Free Book Project:  Hi, I am Professor Mois Ture and I will be telling you about water. You can call it RAIN. You can call it SNOW. You can call it SLEET. You can call it HAIL. But it's WATER all the same. Did you ever wonder how",
                 "position": 1,
                 "pagenumber": 1
             },
             {
-                "text": " it HAIL. But it’s WATER all the same. Did you ever wonder how old water is or where it comes from? The answers may surprise you.  The next time you see a pond or even a glass of water, think about how old that water might be. Do you really want to know ? I thought you did.  Did you brush your teeth this morning? Well, some of the water that you used could have fallen from the sky yesterday, or a week, or month ago. It’s pretty new.  But, some part of that water is very old and was around during the time of the dinosaurs, or even longer. Or maybe it’s a little newer; like from the time when the Pharaohs were building pyramids.  You see there is only a limited amount of water and it gets recycled. Yep! It keeps going round and round. We call it the “Water Cycle.”  Yes – You",
+                "text": " it HAIL. But it's WATER all the same. Did you ever wonder how old water is or where it comes from? The answers may surprise you.  The next time you see a pond or even a glass of water, think about how old that water might be. Do you really want to know ? I thought you did.  Did you brush your teeth this morning? Well, some of the water that you used could have fallen from the sky yesterday, or a week, or month ago. It's pretty new.  But, some part of that water is very old and was around during the time of the dinosaurs, or even longer. Or maybe it's a little newer; like from the time when the Pharaohs were building pyramids.  You see there is only a limited amount of water and it gets recycled. Yep! It keeps going round and round. We call it the “Water Cycle.”  Yes - You",
                 "position": 2,
                 "pagenumber": 2
             }
@@ -1300,14 +1299,14 @@ The API responsible for a fetching text associated with a particular chunk and c
 }
 
 ....
-=== Backend Database connection 
+=== Backend Database connection
 ----
 POST /backend_connection_configuation
 ----
 
-The API responsible for create the connection obj from Neo4j DB based on environment variable and return the status for show/hide login dialog on UI 
+The API responsible for create the connection obj from Neo4j DB based on environment variable and return the status for show/hide login dialog on UI
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
@@ -1322,17 +1321,17 @@ The API responsible for create the connection obj from Neo4j DB based on environ
 POST /schema_visualization
 ----
 
-User can visualize schema of the db through this API. 
+User can visualize schema of the db through this API.
 
-**API Parameters :**
+**API Parameters:**
 
-* `uri`=Neo4j uri, 
-* `userName`= Neo4j db username, 
-* `password`= Neo4j db password, 
-* `database`= Neo4j database name,
-* `email`= Logged in User Email
+* `uri`= Neo4j uri,
+* `userName` = Neo4j db username,
+* `password` = Neo4j db password,
+* `database` = Neo4j database name,
+* `email` = Logged in User Email
 
-**Response :**
+**Response:**
 [source,json,indent=0]
 ....
 {
