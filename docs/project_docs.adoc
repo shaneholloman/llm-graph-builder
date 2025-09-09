@@ -96,8 +96,6 @@ Allow unauthenticated request : Yes
 
 * Langserve is used with FAST API to deploy Langchain runnables and chains as a REST API.
 
-* Langsmith is used to monitor and evaluate the application
-
 
 Developement url 
 
